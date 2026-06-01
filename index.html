@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Exam Vocabulary Quiz Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #172554, #0f172a);
+      color: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 950px;
+      background: rgba(15, 23, 42, 0.94);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: #cbd5e1;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .settings {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .field {
+      background: rgba(30, 41, 59, 0.75);
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #e2e8f0;
+    }
+
+    select, button, input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: none;
+      font-size: 16px;
+    }
+
+    select, input {
+      background: #f8fafc;
+      color: #0f172a;
+      outline: none;
+    }
+
+    button {
+      cursor: pointer;
+      background: #38bdf8;
+      color: #082f49;
+      font-weight: 800;
+      transition: 0.15s;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      background: #7dd3fc;
+    }
+
+    button.secondary {
+      background: #334155;
+      color: #f8fafc;
+    }
+
+    button.danger {
+      background: #fb7185;
+      color: #4c0519;
+    }
+
+    .top-bar {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: 22px 0;
+    }
+
+    .stat {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: bold;
+      color: #e2e8f0;
+    }
+
+    .quiz-card {
+      background: #f8fafc;
+      color: #0f172a;
+      border-radius: 22px;
+      padding: 28px;
+      margin-top: 18px;
+      box-shadow: inset 0 0 0 1px rgba(15,23,42,0.08);
+    }
+
+    .tag-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .tag {
+      background: #e0f2fe;
+      color: #075985;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .question-label {
+      color: #475569;
+      font-size: 15px;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    .word {
+      font-size: 44px;
+      font-weight: 900;
+      margin: 8px 0 10px;
+      line-height: 1.1;
+    }
+
+    .hint {
+      color: #64748b;
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .choice-btn {
+      background: #e2e8f0;
+      color: #0f172a;
+      text-align: left;
+      font-weight: bold;
+      min-height: 56px;
+    }
+
+    .choice-btn:hover {
+      background: #cbd5e1;
+    }
+
+    .choice-btn.correct {
+      background: #86efac;
+      color: #052e16;
+    }
+
+    .choice-btn.wrong {
+      background: #fda4af;
+      color: #4c0519;
+    }
+
+    .answer-area {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .answer-area input {
+      flex: 1;
+      border: 2px solid #cbd5e1;
+    }
+
+    .answer-area button {
+      width: 170px;
+    }
+
+    .feedback {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 14px;
+      font-weight: bold;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .feedback.good {
+      display: block;
+      background: #dcfce7;
+      color: #14532d;
+    }
+
+    .feedback.bad {
+      display: block;
+      background: #ffe4e6;
+      color: #881337;
+    }
+
+    .small-note {
+      margin-top: 14px;
+      color: #94a3b8;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .end-screen {
+      text-align: center;
+      padding: 32px;
+      background: #f8fafc;
+      color: #0f172a;
+      border-radius: 22px;
+      margin-top: 20px;
+    }
+
+    .end-score {
+      font-size: 56px;
+      font-weight: 900;
+      margin: 12px 0;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 700px) {
+      .settings {
+        grid-template-columns: 1fr;
+      }
+
+      .choices {
+        grid-template-columns: 1fr;
+      }
+
+      .word {
+        font-size: 34px;
+      }
+
+      .answer-area {
+        flex-direction: column;
+      }
+
+      .answer-area button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Exam Vocabulary Quiz</h1>
+    <div class="subtitle">
+      Practice vocabulary for TOEIC, TOEFL, EIKEN, and IELTS. Choose one exam, one category, or mix everything together.
+    </div>
+
+    <div id="setup">
+      <div class="settings">
+        <div class="field">
+          <label for="examSelect">Exam</label>
+          <select id="examSelect">
+            <option value="ALL">All Exams Mixed</option>
+            <option value="TOEIC">TOEIC</option>
+            <option value="TOEFL">TOEFL</option>
+            <option value="EIKEN">EIKEN</option>
+            <option value="IELTS">IELTS</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="categorySelect">Vocabulary Category</label>
+          <select id="categorySelect">
+            <option value="ALL">All Categories Mixed</option>
+            <option value="Business">Business</option>
+            <option value="Academic">Academic</option>
+            <option value="Daily">Daily Life</option>
+            <option value="Environment">Environment</option>
+            <option value="Society">Society</option>
+            <option value="Science">Science</option>
+            <option value="Essay">Essay / Discussion</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="modeSelect">Game Mode</label>
+          <select id="modeSelect">
+            <option value="choice">Multiple Choice</option>
+            <option value="type">Type In</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="directionSelect">Question Direction</label>
+          <select id="directionSelect">
+            <option value="EN_TO_JA">English → Japanese</option>
+            <option value="JA_TO_EN">Japanese → English</option>
+          </select>
+        </div>
+      </div>
+
+      <button onclick="startGame()">Start Game</button>
+      <div class="small-note">
+        Type-in mode uses loose judging. For English answers, small spelling mistakes may be accepted. For Japanese answers, close meanings or included keywords may be accepted.
+      </div>
+    </div>
+
+    <div id="game" class="hidden">
+      <div class="top-bar">
+        <div class="stat">Score: <span id="score">0</span></div>
+        <div class="stat">Correct: <span id="correct">0</span></div>
+        <div class="stat">Mistakes: <span id="mistakes">0</span></div>
+        <div class="stat">Lives: <span id="lives">❤️❤️❤️</span></div>
+        <button class="secondary" style="width:auto; padding:10px 16px;" onclick="backToSetup()">Change Settings</button>
+      </div>
+
+      <div id="quizCard" class="quiz-card">
+        <div class="tag-row">
+          <span class="tag" id="examTag"></span>
+          <span class="tag" id="categoryTag"></span>
+        </div>
+
+        <div class="question-label" id="questionLabel"></div>
+        <div class="word" id="questionWord"></div>
+        <div class="hint" id="hintText"></div>
+
+        <div id="choiceArea" class="choices"></div>
+
+        <div id="typeArea" class="answer-area hidden">
+          <input id="typeInput" type="text" placeholder="Type your answer here..." autocomplete="off"/>
+          <button onclick="checkTypedAnswer()">Submit</button>
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+        <button id="nextBtn" class="secondary hidden" style="margin-top:16px;" onclick="nextQuestion()">Next Question</button>
+      </div>
+    </div>
+
+    <div id="endScreen" class="end-screen hidden">
+      <h2>Game Over</h2>
+      <div class="end-score" id="finalScore">0</div>
+      <p id="finalMessage"></p>
+      <button onclick="restartGame()">Play Again</button>
+    </div>
+  </div>
+
+  <script>
+    const vocabulary = [
+      // TOEIC - Business
+      { exam:"TOEIC", category:"Business", en:"invoice", ja:"請求書", synonyms:["bill"], jaKeywords:["請求書","請求","代金"] },
+      { exam:"TOEIC", category:"Business", en:"shipment", ja:"発送、出荷", synonyms:["delivery"], jaKeywords:["発送","出荷","配送"] },
+      { exam:"TOEIC", category:"Business", en:"deadline", ja:"締め切り", synonyms:["due date"], jaKeywords:["締め切り","期限","納期"] },
+      { exam:"TOEIC", category:"Business", en:"candidate", ja:"候補者、志願者", synonyms:["applicant"], jaKeywords:["候補者","志願者","応募者"] },
+      { exam:"TOEIC", category:"Business", en:"negotiate", ja:"交渉する", synonyms:["bargain"], jaKeywords:["交渉","話し合う"] },
+      { exam:"TOEIC", category:"Business", en:"reimburse", ja:"返金する、払い戻す", synonyms:["refund","repay"], jaKeywords:["返金","払い戻し","弁償"] },
+      { exam:"TOEIC", category:"Business", en:"inventory", ja:"在庫、棚卸し", synonyms:["stock"], jaKeywords:["在庫","棚卸し"] },
+      { exam:"TOEIC", category:"Business", en:"complaint", ja:"苦情、不満", synonyms:["grievance"], jaKeywords:["苦情","不満","クレーム"] },
+      { exam:"TOEIC", category:"Business", en:"authorize", ja:"許可する、権限を与える", synonyms:["permit","approve"], jaKeywords:["許可","認可","権限"] },
+      { exam:"TOEIC", category:"Business", en:"venue", ja:"会場、開催地", synonyms:["location","site"], jaKeywords:["会場","開催地","場所"] },
+
+      // TOEIC - Daily
+      { exam:"TOEIC", category:"Daily", en:"commute", ja:"通勤する、通学する", synonyms:["travel to work"], jaKeywords:["通勤","通学"] },
+      { exam:"TOEIC", category:"Daily", en:"accommodation", ja:"宿泊施設", synonyms:["lodging"], jaKeywords:["宿泊","宿","ホテル"] },
+      { exam:"TOEIC", category:"Daily", en:"reservation", ja:"予約", synonyms:["booking"], jaKeywords:["予約"] },
+      { exam:"TOEIC", category:"Daily", en:"delay", ja:"遅れ、遅延", synonyms:["postpone"], jaKeywords:["遅れ","遅延","延期"] },
+      { exam:"TOEIC", category:"Daily", en:"appliance", ja:"電化製品、器具", synonyms:["device"], jaKeywords:["電化製品","家電","器具"] },
+
+      // TOEFL - Academic
+      { exam:"TOEFL", category:"Academic", en:"hypothesis", ja:"仮説", synonyms:["theory","assumption"], jaKeywords:["仮説","仮定"] },
+      { exam:"TOEFL", category:"Academic", en:"evidence", ja:"証拠、根拠", synonyms:["proof"], jaKeywords:["証拠","根拠"] },
+      { exam:"TOEFL", category:"Academic", en:"analyze", ja:"分析する", synonyms:["examine"], jaKeywords:["分析","検討"] },
+      { exam:"TOEFL", category:"Academic", en:"derive", ja:"由来する、引き出す", synonyms:["come from","obtain"], jaKeywords:["由来","得る","引き出す"] },
+      { exam:"TOEFL", category:"Academic", en:"assumption", ja:"仮定、思い込み", synonyms:["premise"], jaKeywords:["仮定","前提","思い込み"] },
+      { exam:"TOEFL", category:"Academic", en:"subsequent", ja:"その後の、続いて起こる", synonyms:["following","later"], jaKeywords:["その後","続く","後の"] },
+      { exam:"TOEFL", category:"Academic", en:"emerge", ja:"現れる、出現する", synonyms:["appear"], jaKeywords:["現れる","出現"] },
+      { exam:"TOEFL", category:"Academic", en:"predominant", ja:"支配的な、主要な", synonyms:["dominant","main"], jaKeywords:["支配的","主要","優勢"] },
+      { exam:"TOEFL", category:"Academic", en:"valid", ja:"妥当な、有効な", synonyms:["reasonable","effective"], jaKeywords:["妥当","有効","正当"] },
+      { exam:"TOEFL", category:"Academic", en:"attribute", ja:"属性、〜のせいだと考える", synonyms:["quality","ascribe"], jaKeywords:["属性","特質","原因と考える"] },
+
+      // TOEFL - Science
+      { exam:"TOEFL", category:"Science", en:"species", ja:"種、生物種", synonyms:["kind"], jaKeywords:["種","生物種"] },
+      { exam:"TOEFL", category:"Science", en:"habitat", ja:"生息地", synonyms:["environment"], jaKeywords:["生息地","環境"] },
+      { exam:"TOEFL", category:"Science", en:"fossil", ja:"化石", synonyms:["remains"], jaKeywords:["化石"] },
+      { exam:"TOEFL", category:"Science", en:"evolution", ja:"進化", synonyms:["development"], jaKeywords:["進化"] },
+      { exam:"TOEFL", category:"Science", en:"photosynthesis", ja:"光合成", synonyms:[], jaKeywords:["光合成"] },
+      { exam:"TOEFL", category:"Science", en:"molecule", ja:"分子", synonyms:[], jaKeywords:["分子"] },
+      { exam:"TOEFL", category:"Science", en:"gravity", ja:"重力", synonyms:["gravitation"], jaKeywords:["重力"] },
+      { exam:"TOEFL", category:"Science", en:"particle", ja:"粒子", synonyms:[], jaKeywords:["粒子"] },
+
+      // EIKEN - Daily
+      { exam:"EIKEN", category:"Daily", en:"polite", ja:"礼儀正しい", synonyms:["courteous"], jaKeywords:["礼儀","丁寧"] },
+      { exam:"EIKEN", category:"Daily", en:"ordinary", ja:"普通の、一般的な", synonyms:["common","normal"], jaKeywords:["普通","一般"] },
+      { exam:"EIKEN", category:"Daily", en:"improve", ja:"改善する、上達する", synonyms:["get better"], jaKeywords:["改善","上達","良くする"] },
+      { exam:"EIKEN", category:"Daily", en:"avoid", ja:"避ける", synonyms:["escape"], jaKeywords:["避ける","回避"] },
+      { exam:"EIKEN", category:"Daily", en:"realize", ja:"気づく、実現する", synonyms:["notice","achieve"], jaKeywords:["気づく","実現"] },
+      { exam:"EIKEN", category:"Daily", en:"depend", ja:"頼る、左右される", synonyms:["rely"], jaKeywords:["頼る","依存","左右"] },
+      { exam:"EIKEN", category:"Daily", en:"available", ja:"利用できる、手が空いている", synonyms:["free","accessible"], jaKeywords:["利用できる","空いている","入手できる"] },
+      { exam:"EIKEN", category:"Daily", en:"neighbor", ja:"隣人", synonyms:[], jaKeywords:["隣人","近所"] },
+
+      // EIKEN - Society
+      { exam:"EIKEN", category:"Society", en:"population", ja:"人口", synonyms:[], jaKeywords:["人口"] },
+      { exam:"EIKEN", category:"Society", en:"custom", ja:"習慣、慣習", synonyms:["tradition"], jaKeywords:["習慣","慣習","伝統"] },
+      { exam:"EIKEN", category:"Society", en:"crime", ja:"犯罪", synonyms:["offense"], jaKeywords:["犯罪"] },
+      { exam:"EIKEN", category:"Society", en:"volunteer", ja:"ボランティア、志願する", synonyms:["helper"], jaKeywords:["ボランティア","志願"] },
+      { exam:"EIKEN", category:"Society", en:"citizen", ja:"市民、国民", synonyms:["resident"], jaKeywords:["市民","国民"] },
+      { exam:"EIKEN", category:"Society", en:"welfare", ja:"福祉、幸福", synonyms:["well-being"], jaKeywords:["福祉","幸福"] },
+
+      // IELTS - Essay / Discussion
+      { exam:"IELTS", category:"Essay", en:"advantage", ja:"利点、強み", synonyms:["benefit","strength"], jaKeywords:["利点","強み","メリット"] },
+      { exam:"IELTS", category:"Essay", en:"disadvantage", ja:"欠点、不利な点", synonyms:["drawback","weakness"], jaKeywords:["欠点","不利","デメリット"] },
+      { exam:"IELTS", category:"Essay", en:"significant", ja:"重要な、かなりの", synonyms:["important","considerable"], jaKeywords:["重要","かなり","重大"] },
+      { exam:"IELTS", category:"Essay", en:"consequence", ja:"結果、影響", synonyms:["result","outcome"], jaKeywords:["結果","影響"] },
+      { exam:"IELTS", category:"Essay", en:"perspective", ja:"視点、考え方", synonyms:["viewpoint"], jaKeywords:["視点","観点","考え方"] },
+      { exam:"IELTS", category:"Essay", en:"justify", ja:"正当化する", synonyms:["defend"], jaKeywords:["正当化","弁明"] },
+      { exam:"IELTS", category:"Essay", en:"emphasize", ja:"強調する", synonyms:["stress","highlight"], jaKeywords:["強調"] },
+      { exam:"IELTS", category:"Essay", en:"controversial", ja:"議論を呼ぶ、物議を醸す", synonyms:["debatable"], jaKeywords:["議論","物議","賛否"] },
+      { exam:"IELTS", category:"Essay", en:"inevitable", ja:"避けられない、必然的な", synonyms:["unavoidable"], jaKeywords:["避けられない","必然"] },
+      { exam:"IELTS", category:"Essay", en:"sustainable", ja:"持続可能な", synonyms:["maintainable"], jaKeywords:["持続可能"] },
+
+      // IELTS - Environment
+      { exam:"IELTS", category:"Environment", en:"pollution", ja:"汚染、公害", synonyms:["contamination"], jaKeywords:["汚染","公害"] },
+      { exam:"IELTS", category:"Environment", en:"emission", ja:"排出、放出", synonyms:["release"], jaKeywords:["排出","放出"] },
+      { exam:"IELTS", category:"Environment", en:"renewable", ja:"再生可能な", synonyms:["reusable"], jaKeywords:["再生可能"] },
+      { exam:"IELTS", category:"Environment", en:"conservation", ja:"保護、保存", synonyms:["preservation"], jaKeywords:["保護","保存"] },
+      { exam:"IELTS", category:"Environment", en:"biodiversity", ja:"生物多様性", synonyms:[], jaKeywords:["生物多様性"] },
+      { exam:"IELTS", category:"Environment", en:"scarce", ja:"不足している、乏しい", synonyms:["rare","limited"], jaKeywords:["不足","乏しい","少ない"] },
+      { exam:"IELTS", category:"Environment", en:"consume", ja:"消費する", synonyms:["use"], jaKeywords:["消費","使う"] },
+
+      // Mixed advanced
+      { exam:"TOEFL", category:"Society", en:"inequality", ja:"不平等、格差", synonyms:["disparity"], jaKeywords:["不平等","格差"] },
+      { exam:"IELTS", category:"Society", en:"urbanization", ja:"都市化", synonyms:[], jaKeywords:["都市化"] },
+      { exam:"EIKEN", category:"Society", en:"elderly", ja:"高齢の、高齢者", synonyms:["senior"], jaKeywords:["高齢","高齢者"] },
+      { exam:"TOEIC", category:"Business", en:"efficient", ja:"効率的な", synonyms:["productive"], jaKeywords:["効率"] },
+      { exam:"TOEFL", category:"Academic", en:"interpret", ja:"解釈する、通訳する", synonyms:["explain","translate"], jaKeywords:["解釈","通訳"] },
+      { exam:"IELTS", category:"Essay", en:"whereas", ja:"一方で、ところが", synonyms:["while"], jaKeywords:["一方","ところが","対して"] },
+      { exam:"EIKEN", category:"Daily", en:"although", ja:"〜だけれども", synonyms:["though","even though"], jaKeywords:["だけれど","にもかかわらず"] },
+      { exam:"TOEFL", category:"Academic", en:"contradict", ja:"矛盾する、反論する", synonyms:["oppose"], jaKeywords:["矛盾","反論"] },
+      { exam:"IELTS", category:"Essay", en:"enhance", ja:"高める、向上させる", synonyms:["improve","boost"], jaKeywords:["高める","向上","強化"] },
+      { exam:"TOEIC", category:"Business", en:"representative", ja:"代表者、担当者", synonyms:["agent"], jaKeywords:["代表","担当者"] }
+    ];
+
+    let filteredWords = [];
+    let currentWord = null;
+    let score = 0;
+    let correct = 0;
+    let mistakes = 0;
+    let lives = 3;
+    let currentMode = "choice";
+    let currentDirection = "EN_TO_JA";
+    let answered = false;
+
+    const setup = document.getElementById("setup");
+    const game = document.getElementById("game");
+    const endScreen = document.getElementById("endScreen");
+    const scoreEl = document.getElementById("score");
+    const correctEl = document.getElementById("correct");
+    const mistakesEl = document.getElementById("mistakes");
+    const livesEl = document.getElementById("lives");
+    const examTag = document.getElementById("examTag");
+    const categoryTag = document.getElementById("categoryTag");
+    const questionLabel = document.getElementById("questionLabel");
+    const questionWord = document.getElementById("questionWord");
+    const hintText = document.getElementById("hintText");
+    const choiceArea = document.getElementById("choiceArea");
+    const typeArea = document.getElementById("typeArea");
+    const typeInput = document.getElementById("typeInput");
+    const feedback = document.getElementById("feedback");
+    const nextBtn = document.getElementById("nextBtn");
+
+    function startGame() {
+      const exam = document.getElementById("examSelect").value;
+      const category = document.getElementById("categorySelect").value;
+      currentMode = document.getElementById("modeSelect").value;
+      currentDirection = document.getElementById("directionSelect").value;
+
+      filteredWords = vocabulary.filter(item => {
+        const examMatch = exam === "ALL" || item.exam === exam;
+        const categoryMatch = category === "ALL" || item.category === category;
+        return examMatch && categoryMatch;
+      });
+
+      if (filteredWords.length < 4 && currentMode === "choice") {
+        alert("Not enough words for multiple choice. Please choose All Categories or All Exams.");
+        return;
+      }
+
+      if (filteredWords.length < 1) {
+        alert("No words found. Please choose another setting.");
+        return;
+      }
+
+      score = 0;
+      correct = 0;
+      mistakes = 0;
+      lives = 3;
+
+      setup.classList.add("hidden");
+      endScreen.classList.add("hidden");
+      game.classList.remove("hidden");
+
+      updateStats();
+      nextQuestion();
+    }
+
+    function backToSetup() {
+      game.classList.add("hidden");
+      endScreen.classList.add("hidden");
+      setup.classList.remove("hidden");
+    }
+
+    function restartGame() {
+      endScreen.classList.add("hidden");
+      setup.classList.remove("hidden");
+    }
+
+    function updateStats() {
+      scoreEl.textContent = score;
+      correctEl.textContent = correct;
+      mistakesEl.textContent = mistakes;
+      livesEl.textContent = "❤️".repeat(lives) + "🖤".repeat(3 - lives);
+    }
+
+    function nextQuestion() {
+      if (lives <= 0) {
+        endGame();
+        return;
+      }
+
+      answered = false;
+      feedback.className = "feedback";
+      feedback.textContent = "";
+      nextBtn.classList.add("hidden");
+      choiceArea.innerHTML = "";
+      typeInput.value = "";
+
+      currentWord = filteredWords[Math.floor(Math.random() * filteredWords.length)];
+
+      examTag.textContent = currentWord.exam;
+      categoryTag.textContent = currentWord.category;
+
+      if (currentDirection === "EN_TO_JA") {
+        questionLabel.textContent = "Choose or type the Japanese meaning:";
+        questionWord.textContent = currentWord.en;
+        hintText.textContent = "Direction: English → Japanese";
+      } else {
+        questionLabel.textContent = "Choose or type the English word:";
+        questionWord.textContent = currentWord.ja;
+        hintText.textContent = "Direction: Japanese → English";
+      }
+
+      if (currentMode === "choice") {
+        typeArea.classList.add("hidden");
+        choiceArea.classList.remove("hidden");
+        renderChoices();
+      } else {
+        choiceArea.classList.add("hidden");
+        typeArea.classList.remove("hidden");
+        setTimeout(() => typeInput.focus(), 100);
+      }
+    }
+
+    function renderChoices() {
+      const correctAnswer = currentDirection === "EN_TO_JA" ? currentWord.ja : currentWord.en;
+
+      let wrongPool = filteredWords
+        .filter(w => w.en !== currentWord.en)
+        .map(w => currentDirection === "EN_TO_JA" ? w.ja : w.en);
+
+      wrongPool = shuffle([...new Set(wrongPool)]);
+      const options = shuffle([correctAnswer, ...wrongPool.slice(0, 3)]);
+
+      options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.className = "choice-btn";
+        btn.textContent = option;
+        btn.onclick = () => checkChoice(btn, option, correctAnswer);
+        choiceArea.appendChild(btn);
+      });
+    }
+
+    function checkChoice(button, selected, correctAnswer) {
+      if (answered) return;
+      answered = true;
+
+      const buttons = document.querySelectorAll(".choice-btn");
+      buttons.forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === correctAnswer) btn.classList.add("correct");
+      });
+
+      if (selected === correctAnswer) {
+        button.classList.add("correct");
+        handleCorrect();
+      } else {
+        button.classList.add("wrong");
+        handleWrong();
+      }
+    }
+
+    function checkTypedAnswer() {
+      if (answered) return;
+
+      const userAnswer = typeInput.value.trim();
+      if (!userAnswer) return;
+
+      answered = true;
+
+      const isCorrect = judgeTypedAnswer(userAnswer, currentWord, currentDirection);
+
+      if (isCorrect) {
+        handleCorrect();
+      } else {
+        handleWrong();
+      }
+
+      nextBtn.classList.remove("hidden");
+    }
+
+    function handleCorrect() {
+      score += 1;
+      correct += 1;
+      updateStats();
+
+      feedback.className = "feedback good";
+      feedback.innerHTML = `Correct! <br>Answer: <strong>${currentWord.en}</strong> = ${currentWord.ja}`;
+
+      if (currentMode === "choice") {
+        setTimeout(nextQuestion, 750);
+      }
+    }
+
+    function handleWrong() {
+      mistakes += 1;
+      lives -= 1;
+      updateStats();
+
+      feedback.className = "feedback bad";
+      feedback.innerHTML = `Wrong. <br>Correct answer: <strong>${currentWord.en}</strong> = ${currentWord.ja}`;
+
+      if (lives <= 0) {
+        nextBtn.textContent = "See Result";
+      } else {
+        nextBtn.textContent = "Next Question";
+      }
+
+      nextBtn.classList.remove("hidden");
+    }
+
+    function endGame() {
+      game.classList.add("hidden");
+      endScreen.classList.remove("hidden");
+
+      document.getElementById("finalScore").textContent = score;
+
+      let message = "";
+      if (score >= 20) {
+        message = "Excellent. You survived for a long time.";
+      } else if (score >= 10) {
+        message = "Good work. Keep reviewing the words you missed.";
+      } else if (score >= 5) {
+        message = "Not bad, but you need more repetition.";
+      } else {
+        message = "You should start with a smaller exam/category set and repeat it.";
+      }
+
+      document.getElementById("finalMessage").textContent =
+        `${message} Correct answers: ${correct}. Mistakes: ${mistakes}.`;
+    }
+
+    function judgeTypedAnswer(answer, word, direction) {
+      const normalized = normalize(answer);
+
+      if (direction === "JA_TO_EN") {
+        const acceptable = [word.en, ...word.synonyms].map(normalize);
+        return acceptable.some(ans => {
+          return normalized === ans || nearlyEqual(normalized, ans);
+        });
+      } else {
+        const jaAnswer = normalizeJapanese(answer);
+        const acceptableJapanese = [word.ja, ...word.jaKeywords].map(normalizeJapanese);
+
+        return acceptableJapanese.some(ans => {
+          return jaAnswer === ans || jaAnswer.includes(ans) || ans.includes(jaAnswer);
+        });
+      }
+    }
+
+    function normalize(text) {
+      return String(text)
+        .toLowerCase()
+        .trim()
+        .replace(/[.,!?;:'"()]/g, "")
+        .replace(/\s+/g, " ");
+    }
+
+    function normalizeJapanese(text) {
+      return String(text)
+        .trim()
+        .replace(/[。、，,.!?！？\s]/g, "")
+        .replace(/する$/g, "")
+        .replace(/だ$/g, "")
+        .replace(/です$/g, "");
+    }
+
+    function nearlyEqual(a, b) {
+      if (a.length <= 4 || b.length <= 4) return false;
+      const distance = levenshtein(a, b);
+      if (Math.max(a.length, b.length) >= 8) return distance <= 2;
+      return distance <= 1;
+    }
+
+    function levenshtein(a, b) {
+      const matrix = Array.from({ length: b.length + 1 }, (_, i) => [i]);
+      for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+      for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+          if (b.charAt(i - 1) === a.charAt(j - 1)) {
+            matrix[i][j] = matrix[i - 1][j - 1];
+          } else {
+            matrix[i][j] = Math.min(
+              matrix[i - 1][j - 1] + 1,
+              matrix[i][j - 1] + 1,
+              matrix[i - 1][j] + 1
+            );
+          }
+        }
+      }
+      return matrix[b.length][a.length];
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    typeInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        checkTypedAnswer();
+      }
+    });
+  </script>
+</body>
+</html>
