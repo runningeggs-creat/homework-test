@@ -26,7 +26,7 @@
 
     .app {
       width: 100%;
-      max-width: 1050px;
+      max-width: 1080px;
       background: rgba(15, 23, 42, 0.96);
       border: 1px solid rgba(148, 163, 184, 0.24);
       border-radius: 26px;
@@ -119,6 +119,16 @@
       color: #052e16;
     }
 
+    button.warning {
+      background: #fde047;
+      color: #422006;
+    }
+
+    button.bookmarked {
+      background: #facc15;
+      color: #422006;
+    }
+
     button.small {
       width: auto;
       padding: 9px 13px;
@@ -136,6 +146,24 @@
       font-size: 14px;
       line-height: 1.6;
       margin-top: 14px;
+    }
+
+    .home-panels {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .home-panel {
+      background: rgba(30, 41, 59, 0.82);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      padding: 18px;
+      border-radius: 18px;
+    }
+
+    .home-panel h2 {
+      margin-bottom: 8px;
     }
 
     .top-bar {
@@ -188,6 +216,11 @@
     .tag.level {
       background: #ede9fe;
       color: #5b21b6;
+    }
+
+    .tag.bookmark {
+      background: #fef3c7;
+      color: #92400e;
     }
 
     .question-label {
@@ -290,18 +323,36 @@
       display: none !important;
     }
 
-    .review-list {
+    .review-list, .bookmark-list {
       display: grid;
       gap: 12px;
       margin-top: 18px;
     }
 
-    .review-item {
+    .review-item, .bookmark-item {
       background: #f1f5f9;
+      color: #0f172a;
       border-radius: 16px;
       padding: 16px;
       border: 1px solid #cbd5e1;
       line-height: 1.55;
+    }
+
+    .bookmark-item {
+      background: rgba(248, 250, 252, 0.98);
+    }
+
+    .bookmark-item-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .bookmark-word {
+      font-size: 22px;
+      font-weight: 950;
     }
 
     .final-score {
@@ -335,6 +386,16 @@
       color: #e2e8f0;
     }
 
+    .empty-message {
+      color: #cbd5e1;
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px dashed rgba(148, 163, 184, 0.32);
+      padding: 14px;
+      border-radius: 14px;
+      line-height: 1.6;
+      margin-top: 12px;
+    }
+
     @media (max-width: 720px) {
       body {
         padding: 12px;
@@ -363,6 +424,10 @@
       .answer-area button {
         width: 100%;
       }
+
+      .bookmark-item-top {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
@@ -372,8 +437,8 @@
     <div id="setup">
       <h1>TOEIC Vocabulary Quiz</h1>
       <div class="subtitle">
-        TOEIC-only vocabulary quiz. Choose Basic, Advanced, or Mixed.  
-        The same vocabulary will not appear twice in one play.
+        TOEIC-only vocabulary quiz. Choose Basic, Advanced, or Mixed.
+        You can bookmark any word, even if you answer it correctly.
       </div>
 
       <div class="settings">
@@ -383,6 +448,7 @@
             <option value="MIXED">Mixed: Basic + Advanced</option>
             <option value="BASIC">Basic</option>
             <option value="ADVANCED">Advanced</option>
+            <option value="BOOKMARKS">Bookmarked Words Only</option>
           </select>
         </div>
 
@@ -415,6 +481,22 @@
 
       <button class="start-btn" onclick="startGame()">Start Game</button>
 
+      <div class="home-panels">
+        <div class="home-panel">
+          <h2>⭐ Bookmarked Words</h2>
+          <div class="note">
+            These words are saved in this browser. You can review them here or play only bookmarked words.
+          </div>
+
+          <div class="actions">
+            <button class="success" onclick="startBookmarkedGame()">Play Bookmarked Words</button>
+            <button class="danger" onclick="clearAllBookmarks()">Clear All Bookmarks</button>
+          </div>
+
+          <div id="homeBookmarkList" class="bookmark-list"></div>
+        </div>
+      </div>
+
       <details class="import-box">
         <summary>Optional: Import TOEIC vocabulary CSV / JSON</summary>
         <div class="note">
@@ -429,7 +511,7 @@
         <button class="secondary" style="margin-top:10px;" onclick="loadVocabularyFile()">Load Vocabulary File</button>
 
         <div class="note">
-          PDF cannot be read automatically inside a simple offline HTML file.  
+          PDF cannot be read automatically inside a simple offline HTML file.
           If you convert your PDF vocabulary list to CSV, this game can import it.
         </div>
       </details>
@@ -449,13 +531,14 @@
           <div class="stat">Lives: <span id="lives">❤️❤️❤️</span></div>
           <div class="stat">Question: <span id="questionCount">0</span>/<span id="totalCount">0</span></div>
         </div>
-        <button class="secondary small" onclick="backToSetup()">Change Settings</button>
+        <button class="secondary small" onclick="backToSetup()">Home</button>
       </div>
 
       <div class="quiz-card">
         <div class="tag-row">
           <span class="tag">TOEIC</span>
           <span class="tag level" id="levelTag"></span>
+          <span class="tag bookmark hidden" id="bookmarkTag">Bookmarked</span>
         </div>
 
         <div class="question-label" id="questionLabel"></div>
@@ -464,6 +547,7 @@
         <div class="actions">
           <button class="secondary small" onclick="speakCurrentWord()">🔊 Word</button>
           <button class="secondary small" onclick="speakCurrentSentence()">🔊 Sentence</button>
+          <button id="bookmarkBtn" class="warning small" onclick="toggleCurrentBookmark()">⭐ Bookmark This Word</button>
         </div>
 
         <div id="sentenceBox" class="sentence-box"></div>
@@ -493,7 +577,7 @@
         <div class="actions">
           <button onclick="restartSameSettings()">Play Again</button>
           <button class="success" id="retryWrongBtn" onclick="retryWrongWords()">Retry Wrong Words Only</button>
-          <button class="secondary" onclick="backToSetup()">Change Settings</button>
+          <button class="secondary" onclick="backToSetup()">Home</button>
         </div>
 
         <h3 style="margin-top: 26px;">Wrong Answer Review</h3>
@@ -503,6 +587,8 @@
   </div>
 
   <script>
+    const BOOKMARK_STORAGE_KEY = "toeic_vocab_quiz_bookmarks_v1";
+
     let vocabulary = [
       {
         level:"BASIC",
@@ -879,6 +965,7 @@
     let answered = false;
     let wrongAnswers = [];
     let retryMode = false;
+    let lastGameWasBookmarks = false;
 
     const setup = document.getElementById("setup");
     const game = document.getElementById("game");
@@ -897,6 +984,8 @@
     const totalCountEl = document.getElementById("totalCount");
 
     const levelTag = document.getElementById("levelTag");
+    const bookmarkTag = document.getElementById("bookmarkTag");
+    const bookmarkBtn = document.getElementById("bookmarkBtn");
     const questionLabel = document.getElementById("questionLabel");
     const questionMain = document.getElementById("questionMain");
     const sentenceBox = document.getElementById("sentenceBox");
@@ -906,17 +995,20 @@
     const feedback = document.getElementById("feedback");
     const nextBtn = document.getElementById("nextBtn");
 
+    renderHomeBookmarks();
+
     function startGame() {
       retryMode = false;
+      lastGameWasBookmarks = levelSelect.value === "BOOKMARKS";
       selectedWords = filterWordsByLevel();
 
       if (selectedWords.length < 4 && modeSelect.value === "choice") {
-        alert("Not enough words for multiple choice. Choose Mixed or import more words.");
+        alert("Not enough words for multiple choice. Choose Mixed, import more words, or use Type In mode.");
         return;
       }
 
       if (selectedWords.length < 1) {
-        alert("No vocabulary found.");
+        alert("No vocabulary found. If you chose Bookmarked Words Only, please bookmark some words first.");
         return;
       }
 
@@ -932,9 +1024,27 @@
       nextQuestion();
     }
 
+    function startBookmarkedGame() {
+      const bookmarks = getBookmarkedWords();
+
+      if (bookmarks.length < 1) {
+        alert("No bookmarked words yet.");
+        return;
+      }
+
+      levelSelect.value = "BOOKMARKS";
+      startGame();
+    }
+
     function filterWordsByLevel() {
       const level = levelSelect.value;
+
+      if (level === "BOOKMARKS") {
+        return getBookmarkedWords();
+      }
+
       if (level === "MIXED") return [...vocabulary];
+
       return vocabulary.filter(w => w.level === level);
     }
 
@@ -942,9 +1052,11 @@
       if (lengthSelect.value === "20") {
         return Math.min(20, activeDeck.length);
       }
+
       if (lengthSelect.value === "all") {
         return activeDeck.length;
       }
+
       return activeDeck.length;
     }
 
@@ -987,6 +1099,7 @@
 
     function renderQuestion() {
       levelTag.textContent = currentWord.level === "BASIC" ? "Basic" : "Advanced";
+      updateBookmarkUI();
 
       const direction = directionSelect.value;
       const mode = modeSelect.value;
@@ -1001,14 +1114,14 @@
         questionMain.textContent = currentWord.en;
 
         sentenceBox.innerHTML = `
-          <strong>Example:</strong> ${currentWord.example_en}
+          <strong>Example:</strong> ${escapeHtml(currentWord.example_en)}
         `;
       } else {
         questionLabel.textContent = "What is the English word for this Japanese meaning?";
         questionMain.textContent = currentWord.ja;
 
         sentenceBox.innerHTML = `
-          <strong>日本語例文:</strong> ${currentWord.example_ja}
+          <strong>日本語例文:</strong> ${escapeHtml(currentWord.example_ja)}
         `;
       }
 
@@ -1024,11 +1137,13 @@
     }
 
     function renderBlankQuestion() {
+      updateBookmarkUI();
+
       questionLabel.textContent = "Fill in the blank with the correct TOEIC word.";
       questionMain.textContent = blankSentence(currentWord.example_en, currentWord.en);
 
       sentenceBox.innerHTML = `
-        <strong>Japanese hint:</strong> ${currentWord.ja}
+        <strong>Japanese hint:</strong> ${escapeHtml(currentWord.ja)}
       `;
 
       choiceArea.classList.add("hidden");
@@ -1138,11 +1253,12 @@
       feedback.className = "feedback good";
       feedback.innerHTML = `
         ${message}<br><br>
-        <strong>${currentWord.en}</strong> = ${currentWord.ja}<br>
-        <strong>Definition:</strong> ${currentWord.definition}<br>
-        <strong>Example:</strong> ${currentWord.example_en}<br>
-        <strong>Japanese:</strong> ${currentWord.example_ja}<br>
-        <strong>Synonyms:</strong> ${currentWord.synonyms.length ? currentWord.synonyms.join(", ") : "None"}
+        <strong>${escapeHtml(currentWord.en)}</strong> = ${escapeHtml(currentWord.ja)}<br>
+        <strong>Definition:</strong> ${escapeHtml(currentWord.definition)}<br>
+        <strong>Example:</strong> ${escapeHtml(currentWord.example_en)}<br>
+        <strong>Japanese:</strong> ${escapeHtml(currentWord.example_ja)}<br>
+        <strong>Synonyms:</strong> ${currentWord.synonyms.length ? escapeHtml(currentWord.synonyms.join(", ")) : "None"}<br><br>
+        <em>You can still bookmark this word if you want to review it later.</em>
       `;
     }
 
@@ -1162,11 +1278,12 @@
       feedback.innerHTML = `
         ${reason}<br>
         Your answer: <strong>${escapeHtml(userAnswer || "")}</strong><br><br>
-        Correct answer: <strong>${currentWord.en}</strong> = ${currentWord.ja}<br>
-        <strong>Definition:</strong> ${currentWord.definition}<br>
-        <strong>Example:</strong> ${currentWord.example_en}<br>
-        <strong>Japanese:</strong> ${currentWord.example_ja}<br>
-        <strong>Synonyms:</strong> ${currentWord.synonyms.length ? currentWord.synonyms.join(", ") : "None"}
+        Correct answer: <strong>${escapeHtml(currentWord.en)}</strong> = ${escapeHtml(currentWord.ja)}<br>
+        <strong>Definition:</strong> ${escapeHtml(currentWord.definition)}<br>
+        <strong>Example:</strong> ${escapeHtml(currentWord.example_en)}<br>
+        <strong>Japanese:</strong> ${escapeHtml(currentWord.example_ja)}<br>
+        <strong>Synonyms:</strong> ${currentWord.synonyms.length ? escapeHtml(currentWord.synonyms.join(", ")) : "None"}<br><br>
+        <em>You can bookmark this word and review it from the Home screen.</em>
       `;
     }
 
@@ -1190,11 +1307,11 @@
       if (score >= 20) {
         message = "Excellent. You answered many TOEIC words correctly.";
       } else if (score >= 10) {
-        message = "Good job. Review your wrong answers and retry them.";
+        message = "Good job. Review your wrong answers and bookmarked words.";
       } else if (score >= 5) {
         message = "Not bad, but repetition is needed.";
       } else {
-        message = "Start with Basic level and repeat the wrong words.";
+        message = "Start with Basic level and repeat the wrong or bookmarked words.";
       }
 
       document.getElementById("finalMessage").textContent =
@@ -1221,15 +1338,21 @@
         div.innerHTML = `
           <div>
             <span class="pill">TOEIC</span>
-            <span class="pill">${w.level}</span>
+            <span class="pill">${escapeHtml(w.level)}</span>
+            ${isBookmarked(w.en) ? '<span class="pill">Bookmarked</span>' : ''}
           </div>
-          <strong>${w.en}</strong> = ${w.ja}<br>
+          <strong>${escapeHtml(w.en)}</strong> = ${escapeHtml(w.ja)}<br>
           Your answer: <strong>${escapeHtml(item.userAnswer)}</strong><br>
-          Reason: ${item.reason}<br>
-          Definition: ${w.definition}<br>
-          Example: ${w.example_en}<br>
-          Japanese: ${w.example_ja}<br>
-          Synonyms: ${w.synonyms.length ? w.synonyms.join(", ") : "None"}
+          Reason: ${escapeHtml(item.reason)}<br>
+          Definition: ${escapeHtml(w.definition)}<br>
+          Example: ${escapeHtml(w.example_en)}<br>
+          Japanese: ${escapeHtml(w.example_ja)}<br>
+          Synonyms: ${w.synonyms.length ? escapeHtml(w.synonyms.join(", ")) : "None"}
+          <div class="actions">
+            <button class="warning small" onclick="toggleBookmarkByWord('${escapeForAttribute(w.en)}')">
+              ${isBookmarked(w.en) ? "★ Remove Bookmark" : "☆ Bookmark"}
+            </button>
+          </div>
         `;
         reviewList.appendChild(div);
       });
@@ -1263,6 +1386,9 @@
     }
 
     function restartSameSettings() {
+      if (lastGameWasBookmarks) {
+        levelSelect.value = "BOOKMARKS";
+      }
       startGame();
     }
 
@@ -1270,6 +1396,7 @@
       game.classList.add("hidden");
       result.classList.add("hidden");
       setup.classList.remove("hidden");
+      renderHomeBookmarks();
     }
 
     function speakCurrentWord() {
@@ -1293,6 +1420,129 @@
       utterance.lang = "en-US";
       utterance.rate = 0.9;
       speechSynthesis.speak(utterance);
+    }
+
+    function toggleCurrentBookmark() {
+      if (!currentWord) return;
+      toggleBookmarkByWord(currentWord.en);
+      updateBookmarkUI();
+      renderHomeBookmarks();
+    }
+
+    function toggleBookmarkByWord(enWord) {
+      const word = vocabulary.find(w => normalizeEnglish(w.en) === normalizeEnglish(enWord));
+      if (!word) return;
+
+      const bookmarks = getBookmarksRaw();
+      const key = normalizeEnglish(word.en);
+      const exists = bookmarks.some(item => normalizeEnglish(item.en) === key);
+
+      let updated;
+
+      if (exists) {
+        updated = bookmarks.filter(item => normalizeEnglish(item.en) !== key);
+      } else {
+        updated = [...bookmarks, word];
+      }
+
+      saveBookmarksRaw(updated);
+      updateBookmarkUI();
+      renderHomeBookmarks();
+
+      if (!result.classList.contains("hidden")) {
+        renderReview();
+      }
+    }
+
+    function updateBookmarkUI() {
+      if (!currentWord) return;
+
+      const marked = isBookmarked(currentWord.en);
+
+      bookmarkTag.classList.toggle("hidden", !marked);
+      bookmarkBtn.classList.toggle("bookmarked", marked);
+      bookmarkBtn.textContent = marked ? "★ Remove Bookmark" : "☆ Bookmark This Word";
+    }
+
+    function isBookmarked(enWord) {
+      return getBookmarksRaw().some(item => normalizeEnglish(item.en) === normalizeEnglish(enWord));
+    }
+
+    function getBookmarkedWords() {
+      const bookmarks = getBookmarksRaw();
+
+      return bookmarks.map(bookmark => {
+        const builtIn = vocabulary.find(w => normalizeEnglish(w.en) === normalizeEnglish(bookmark.en));
+        return builtIn || bookmark;
+      });
+    }
+
+    function getBookmarksRaw() {
+      try {
+        const saved = localStorage.getItem(BOOKMARK_STORAGE_KEY);
+        if (!saved) return [];
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveBookmarksRaw(bookmarks) {
+      localStorage.setItem(BOOKMARK_STORAGE_KEY, JSON.stringify(bookmarks));
+    }
+
+    function clearAllBookmarks() {
+      const ok = confirm("Remove all bookmarked words?");
+      if (!ok) return;
+
+      localStorage.removeItem(BOOKMARK_STORAGE_KEY);
+      renderHomeBookmarks();
+      updateBookmarkUI();
+    }
+
+    function renderHomeBookmarks() {
+      const list = document.getElementById("homeBookmarkList");
+      if (!list) return;
+
+      const bookmarks = getBookmarkedWords();
+      list.innerHTML = "";
+
+      if (bookmarks.length === 0) {
+        list.innerHTML = `
+          <div class="empty-message">
+            No bookmarked words yet. During a quiz, press “☆ Bookmark This Word” on any word you want to review later.
+          </div>
+        `;
+        return;
+      }
+
+      bookmarks.forEach(word => {
+        const div = document.createElement("div");
+        div.className = "bookmark-item";
+        div.innerHTML = `
+          <div class="bookmark-item-top">
+            <div>
+              <div>
+                <span class="pill">TOEIC</span>
+                <span class="pill">${escapeHtml(word.level)}</span>
+              </div>
+              <div class="bookmark-word">${escapeHtml(word.en)}</div>
+              <div><strong>Japanese:</strong> ${escapeHtml(word.ja)}</div>
+            </div>
+            <button class="danger small" onclick="toggleBookmarkByWord('${escapeForAttribute(word.en)}')">
+              Remove
+            </button>
+          </div>
+          <div style="margin-top:10px;">
+            <strong>Definition:</strong> ${escapeHtml(word.definition)}<br>
+            <strong>Example:</strong> ${escapeHtml(word.example_en)}<br>
+            <strong>Japanese:</strong> ${escapeHtml(word.example_ja)}<br>
+            <strong>Synonyms:</strong> ${word.synonyms.length ? escapeHtml(word.synonyms.join(", ")) : "None"}
+          </div>
+        `;
+        list.appendChild(div);
+      });
     }
 
     function blankSentence(sentence, word) {
@@ -1374,6 +1624,13 @@
         .replace(/'/g, "&#039;");
     }
 
+    function escapeForAttribute(text) {
+      return String(text)
+        .replace(/\\/g, "\\\\")
+        .replace(/'/g, "\\'")
+        .replace(/"/g, "&quot;");
+    }
+
     function escapeRegExp(string) {
       return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     }
@@ -1401,6 +1658,7 @@
           }
 
           alert(`Loaded ${vocabulary.length} TOEIC vocabulary items.`);
+          renderHomeBookmarks();
         } catch (err) {
           alert("Could not load file. Please check the format.");
           console.error(err);
