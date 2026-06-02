@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TOEIC Vocabulary Quiz</title>
+  <title>TOEIC Vocabulary Quiz Endless</title>
 
   <style>
     * {
@@ -26,7 +26,7 @@
 
     .app {
       width: 100%;
-      max-width: 1080px;
+      max-width: 1100px;
       background: rgba(15, 23, 42, 0.96);
       border: 1px solid rgba(148, 163, 184, 0.24);
       border-radius: 26px;
@@ -70,7 +70,7 @@
       color: #e2e8f0;
     }
 
-    select, input, button, textarea {
+    select, input, button {
       width: 100%;
       padding: 12px 14px;
       border-radius: 13px;
@@ -78,17 +78,10 @@
       font-size: 16px;
     }
 
-    select, input, textarea {
+    select, input {
       background: #f8fafc;
       color: #0f172a;
       outline: none;
-    }
-
-    textarea {
-      min-height: 130px;
-      resize: vertical;
-      font-family: Consolas, monospace;
-      font-size: 14px;
     }
 
     button {
@@ -307,6 +300,12 @@
       color: #881337;
     }
 
+    .feedback.info {
+      display: block;
+      background: #dbeafe;
+      color: #1e3a8a;
+    }
+
     .actions {
       display: flex;
       gap: 10px;
@@ -370,6 +369,7 @@
       font-size: 12px;
       font-weight: 900;
       margin-right: 4px;
+      margin-bottom: 4px;
     }
 
     .import-box {
@@ -392,6 +392,16 @@
       border: 1px dashed rgba(148, 163, 184, 0.32);
       padding: 14px;
       border-radius: 14px;
+      line-height: 1.6;
+      margin-top: 12px;
+    }
+
+    .progress-box {
+      background: rgba(15, 23, 42, 0.45);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      padding: 14px;
+      border-radius: 14px;
+      color: #cbd5e1;
       line-height: 1.6;
       margin-top: 12px;
     }
@@ -435,10 +445,10 @@
 <body>
   <div class="app">
     <div id="setup">
-      <h1>TOEIC Vocabulary Quiz</h1>
+      <h1>TOIC Vocabulary Quiz</h1>
       <div class="subtitle">
-        TOEIC-only vocabulary quiz. Choose Basic, Advanced, or Mixed.
-        You can bookmark any word, even if you answer it correctly.
+        Endless TOEIC vocabulary practice. The game continues until you press End Game or lose all 3 lives.
+        Correctly answered words are saved as completed and skipped in future plays by default.
       </div>
 
       <div class="settings">
@@ -470,22 +480,32 @@
         </div>
 
         <div class="field">
-          <label for="lengthSelect">Game Length</label>
-          <select id="lengthSelect">
-            <option value="lives">3 Lives Mode</option>
-            <option value="20">20-Question Challenge</option>
-            <option value="all">All Selected Words</option>
+          <label for="completedSelect">Completed Words</label>
+          <select id="completedSelect">
+            <option value="skip">Skip completed words</option>
+            <option value="include">Include completed words</option>
           </select>
         </div>
       </div>
 
-      <button class="start-btn" onclick="startGame()">Start Game</button>
+      <button class="start-btn" onclick="startGame()">Start Endless Game</button>
 
       <div class="home-panels">
         <div class="home-panel">
+          <h2>📘 Study Progress</h2>
+          <div id="progressBox" class="progress-box"></div>
+          <div class="actions">
+            <button class="danger" onclick="clearCompletedWords()">Reset Completed Words</button>
+          </div>
+          <div class="note">
+            Completed words are words you answered correctly. When “Skip completed words” is selected, they will not appear again in later plays.
+          </div>
+        </div>
+
+        <div class="home-panel">
           <h2>⭐ Bookmarked Words</h2>
           <div class="note">
-            These words are saved in this browser. You can review them here or play only bookmarked words.
+            Bookmark any word during the quiz, even if you answered it correctly.
           </div>
 
           <div class="actions">
@@ -511,8 +531,7 @@
         <button class="secondary" style="margin-top:10px;" onclick="loadVocabularyFile()">Load Vocabulary File</button>
 
         <div class="note">
-          PDF cannot be read automatically inside a simple offline HTML file.
-          If you convert your PDF vocabulary list to CSV, this game can import it.
+          For a truly large endless game, import a bigger vocabulary file. With only the built-in words, the game will stop when all unused words are completed.
         </div>
       </details>
 
@@ -529,7 +548,8 @@
           <div class="stat">Correct: <span id="correct">0</span></div>
           <div class="stat">Mistakes: <span id="mistakes">0</span></div>
           <div class="stat">Lives: <span id="lives">❤️❤️❤️</span></div>
-          <div class="stat">Question: <span id="questionCount">0</span>/<span id="totalCount">0</span></div>
+          <div class="stat">Question: <span id="questionCount">0</span></div>
+          <div class="stat">Remaining: <span id="remainingCount">0</span></div>
         </div>
         <button class="secondary small" onclick="backToSetup()">Home</button>
       </div>
@@ -547,7 +567,7 @@
         <div class="actions">
           <button class="secondary small" onclick="speakCurrentWord()">🔊 Word</button>
           <button class="secondary small" onclick="speakCurrentSentence()">🔊 Sentence</button>
-          <button id="bookmarkBtn" class="warning small" onclick="toggleCurrentBookmark()">⭐ Bookmark This Word</button>
+          <button id="bookmarkBtn" class="warning small" onclick="toggleCurrentBookmark()">☆ Bookmark This Word</button>
         </div>
 
         <div id="sentenceBox" class="sentence-box"></div>
@@ -575,7 +595,7 @@
         <p id="finalMessage"></p>
 
         <div class="actions">
-          <button onclick="restartSameSettings()">Play Again</button>
+          <button onclick="restartSameSettings()">Play Again With Uncompleted Words</button>
           <button class="success" id="retryWrongBtn" onclick="retryWrongWords()">Retry Wrong Words Only</button>
           <button class="secondary" onclick="backToSetup()">Home</button>
         </div>
@@ -587,7 +607,8 @@
   </div>
 
   <script>
-    const BOOKMARK_STORAGE_KEY = "toeic_vocab_quiz_bookmarks_v1";
+    const BOOKMARK_STORAGE_KEY = "toeic_vocab_quiz_bookmarks_v2";
+    const COMPLETED_STORAGE_KEY = "toeic_vocab_quiz_completed_v1";
 
     let vocabulary = [
       {
@@ -961,11 +982,11 @@
     let mistakes = 0;
     let lives = 3;
     let questionNumber = 0;
-    let totalQuestions = 0;
     let answered = false;
     let wrongAnswers = [];
     let retryMode = false;
     let lastGameWasBookmarks = false;
+    let sessionSeen = new Set();
 
     const setup = document.getElementById("setup");
     const game = document.getElementById("game");
@@ -974,14 +995,14 @@
     const levelSelect = document.getElementById("levelSelect");
     const modeSelect = document.getElementById("modeSelect");
     const directionSelect = document.getElementById("directionSelect");
-    const lengthSelect = document.getElementById("lengthSelect");
+    const completedSelect = document.getElementById("completedSelect");
 
     const scoreEl = document.getElementById("score");
     const correctEl = document.getElementById("correct");
     const mistakesEl = document.getElementById("mistakes");
     const livesEl = document.getElementById("lives");
     const questionCountEl = document.getElementById("questionCount");
-    const totalCountEl = document.getElementById("totalCount");
+    const remainingCountEl = document.getElementById("remainingCount");
 
     const levelTag = document.getElementById("levelTag");
     const bookmarkTag = document.getElementById("bookmarkTag");
@@ -996,25 +1017,25 @@
     const nextBtn = document.getElementById("nextBtn");
 
     renderHomeBookmarks();
+    renderProgress();
 
     function startGame() {
       retryMode = false;
       lastGameWasBookmarks = levelSelect.value === "BOOKMARKS";
-      selectedWords = filterWordsByLevel();
+      selectedWords = filterWordsForGame();
 
       if (selectedWords.length < 4 && modeSelect.value === "choice") {
-        alert("Not enough words for multiple choice. Choose Mixed, import more words, or use Type In mode.");
+        alert("Not enough words for multiple choice. Choose Mixed, include completed words, import more words, or use Type In mode.");
         return;
       }
 
       if (selectedWords.length < 1) {
-        alert("No vocabulary found. If you chose Bookmarked Words Only, please bookmark some words first.");
+        alert("No available words. You may have completed all selected words. Import more words, include completed words, or reset completed history.");
         return;
       }
 
       resetGameState();
       activeDeck = shuffle(selectedWords);
-      totalQuestions = getTotalQuestions();
 
       setup.classList.add("hidden");
       result.classList.add("hidden");
@@ -1036,28 +1057,26 @@
       startGame();
     }
 
-    function filterWordsByLevel() {
+    function filterWordsForGame() {
+      let pool;
       const level = levelSelect.value;
 
       if (level === "BOOKMARKS") {
-        return getBookmarkedWords();
+        pool = getBookmarkedWords();
+      } else if (level === "MIXED") {
+        pool = [...vocabulary];
+      } else {
+        pool = vocabulary.filter(w => w.level === level);
       }
 
-      if (level === "MIXED") return [...vocabulary];
+      pool = uniqueWords(pool);
 
-      return vocabulary.filter(w => w.level === level);
-    }
-
-    function getTotalQuestions() {
-      if (lengthSelect.value === "20") {
-        return Math.min(20, activeDeck.length);
+      if (completedSelect.value === "skip" && level !== "BOOKMARKS") {
+        const completed = getCompletedRaw();
+        pool = pool.filter(w => !completed.includes(wordKey(w.en)));
       }
 
-      if (lengthSelect.value === "all") {
-        return activeDeck.length;
-      }
-
-      return activeDeck.length;
+      return pool;
     }
 
     function resetGameState() {
@@ -1068,11 +1087,17 @@
       questionNumber = 0;
       wrongAnswers = [];
       answered = false;
+      sessionSeen = new Set();
     }
 
     function nextQuestion() {
-      if (shouldEndGame()) {
+      if (lives <= 0) {
         endGame();
+        return;
+      }
+
+      if (activeDeck.length === 0) {
+        endBecauseNoWordsLeft();
         return;
       }
 
@@ -1084,17 +1109,24 @@
       typeInput.value = "";
 
       currentWord = activeDeck.shift();
+      sessionSeen.add(wordKey(currentWord.en));
       questionNumber++;
 
       renderQuestion();
       updateStats();
     }
 
-    function shouldEndGame() {
-      if (lives <= 0) return true;
-      if (activeDeck.length === 0) return true;
-      if (lengthSelect.value === "20" && questionNumber >= 20) return true;
-      return false;
+    function endBecauseNoWordsLeft() {
+      game.classList.add("hidden");
+      setup.classList.add("hidden");
+      result.classList.remove("hidden");
+
+      document.getElementById("finalScore").textContent = score;
+      document.getElementById("finalMessage").textContent =
+        "You completed all available unused words in this selection. To keep practicing without repeats, import more vocabulary or reset completed-word history.";
+
+      renderReview();
+      document.getElementById("retryWrongBtn").classList.toggle("hidden", wrongAnswers.length === 0);
     }
 
     function renderQuestion() {
@@ -1248,6 +1280,11 @@
     function handleCorrect(message) {
       score++;
       correct++;
+
+      if (!retryMode && levelSelect.value !== "BOOKMARKS") {
+        addCompletedWord(currentWord.en);
+      }
+
       updateStats();
 
       feedback.className = "feedback good";
@@ -1258,7 +1295,7 @@
         <strong>Example:</strong> ${escapeHtml(currentWord.example_en)}<br>
         <strong>Japanese:</strong> ${escapeHtml(currentWord.example_ja)}<br>
         <strong>Synonyms:</strong> ${currentWord.synonyms.length ? escapeHtml(currentWord.synonyms.join(", ")) : "None"}<br><br>
-        <em>You can still bookmark this word if you want to review it later.</em>
+        <em>This word is now saved as completed. You can still bookmark it for review.</em>
       `;
     }
 
@@ -1283,7 +1320,7 @@
         <strong>Example:</strong> ${escapeHtml(currentWord.example_en)}<br>
         <strong>Japanese:</strong> ${escapeHtml(currentWord.example_ja)}<br>
         <strong>Synonyms:</strong> ${currentWord.synonyms.length ? escapeHtml(currentWord.synonyms.join(", ")) : "None"}<br><br>
-        <em>You can bookmark this word and review it from the Home screen.</em>
+        <em>This word was not saved as completed because you missed it.</em>
       `;
     }
 
@@ -1293,7 +1330,7 @@
       mistakesEl.textContent = mistakes;
       livesEl.textContent = "❤️".repeat(lives) + "🖤".repeat(3 - lives);
       questionCountEl.textContent = questionNumber;
-      totalCountEl.textContent = totalQuestions;
+      remainingCountEl.textContent = activeDeck.length;
     }
 
     function endGame() {
@@ -1304,14 +1341,16 @@
       document.getElementById("finalScore").textContent = score;
 
       let message = "";
-      if (score >= 20) {
-        message = "Excellent. You answered many TOEIC words correctly.";
+      if (lives <= 0) {
+        message = "Game over. You lost all lives.";
+      } else if (score >= 20) {
+        message = "Excellent. You practiced many TOEIC words.";
       } else if (score >= 10) {
-        message = "Good job. Review your wrong answers and bookmarked words.";
+        message = "Good job. Review wrong answers and bookmarked words.";
       } else if (score >= 5) {
-        message = "Not bad, but repetition is needed.";
+        message = "Not bad. Keep going with uncompleted words.";
       } else {
-        message = "Start with Basic level and repeat the wrong or bookmarked words.";
+        message = "Start with Basic level and repeat carefully.";
       }
 
       document.getElementById("finalMessage").textContent =
@@ -1363,9 +1402,9 @@
       const seen = new Set();
 
       wrongAnswers.forEach(item => {
-        if (!seen.has(item.word.en)) {
+        if (!seen.has(wordKey(item.word.en))) {
           wrongUnique.push(item.word);
-          seen.add(item.word.en);
+          seen.add(wordKey(item.word.en));
         }
       });
 
@@ -1374,7 +1413,6 @@
       selectedWords = wrongUnique;
       activeDeck = shuffle(wrongUnique);
       retryMode = true;
-      totalQuestions = activeDeck.length;
 
       resetGameState();
 
@@ -1397,6 +1435,7 @@
       result.classList.add("hidden");
       setup.classList.remove("hidden");
       renderHomeBookmarks();
+      renderProgress();
     }
 
     function speakCurrentWord() {
@@ -1430,17 +1469,17 @@
     }
 
     function toggleBookmarkByWord(enWord) {
-      const word = vocabulary.find(w => normalizeEnglish(w.en) === normalizeEnglish(enWord));
+      const word = vocabulary.find(w => wordKey(w.en) === wordKey(enWord));
       if (!word) return;
 
       const bookmarks = getBookmarksRaw();
-      const key = normalizeEnglish(word.en);
-      const exists = bookmarks.some(item => normalizeEnglish(item.en) === key);
+      const key = wordKey(word.en);
+      const exists = bookmarks.some(item => wordKey(item.en) === key);
 
       let updated;
 
       if (exists) {
-        updated = bookmarks.filter(item => normalizeEnglish(item.en) !== key);
+        updated = bookmarks.filter(item => wordKey(item.en) !== key);
       } else {
         updated = [...bookmarks, word];
       }
@@ -1465,16 +1504,16 @@
     }
 
     function isBookmarked(enWord) {
-      return getBookmarksRaw().some(item => normalizeEnglish(item.en) === normalizeEnglish(enWord));
+      return getBookmarksRaw().some(item => wordKey(item.en) === wordKey(enWord));
     }
 
     function getBookmarkedWords() {
       const bookmarks = getBookmarksRaw();
 
-      return bookmarks.map(bookmark => {
-        const builtIn = vocabulary.find(w => normalizeEnglish(w.en) === normalizeEnglish(bookmark.en));
+      return uniqueWords(bookmarks.map(bookmark => {
+        const builtIn = vocabulary.find(w => wordKey(w.en) === wordKey(bookmark.en));
         return builtIn || bookmark;
-      });
+      }));
     }
 
     function getBookmarksRaw() {
@@ -1489,7 +1528,7 @@
     }
 
     function saveBookmarksRaw(bookmarks) {
-      localStorage.setItem(BOOKMARK_STORAGE_KEY, JSON.stringify(bookmarks));
+      localStorage.setItem(BOOKMARK_STORAGE_KEY, JSON.stringify(uniqueWords(bookmarks)));
     }
 
     function clearAllBookmarks() {
@@ -1526,6 +1565,7 @@
               <div>
                 <span class="pill">TOEIC</span>
                 <span class="pill">${escapeHtml(word.level)}</span>
+                ${isCompleted(word.en) ? '<span class="pill">Completed</span>' : ''}
               </div>
               <div class="bookmark-word">${escapeHtml(word.en)}</div>
               <div><strong>Japanese:</strong> ${escapeHtml(word.ja)}</div>
@@ -1543,6 +1583,84 @@
         `;
         list.appendChild(div);
       });
+    }
+
+    function getCompletedRaw() {
+      try {
+        const saved = localStorage.getItem(COMPLETED_STORAGE_KEY);
+        if (!saved) return [];
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveCompletedRaw(keys) {
+      const unique = [...new Set(keys.map(wordKey))];
+      localStorage.setItem(COMPLETED_STORAGE_KEY, JSON.stringify(unique));
+    }
+
+    function addCompletedWord(enWord) {
+      const completed = getCompletedRaw();
+      const key = wordKey(enWord);
+
+      if (!completed.includes(key)) {
+        completed.push(key);
+        saveCompletedRaw(completed);
+      }
+    }
+
+    function isCompleted(enWord) {
+      return getCompletedRaw().includes(wordKey(enWord));
+    }
+
+    function clearCompletedWords() {
+      const ok = confirm("Reset completed-word history? Previously correct words may appear again.");
+      if (!ok) return;
+
+      localStorage.removeItem(COMPLETED_STORAGE_KEY);
+      renderProgress();
+      renderHomeBookmarks();
+    }
+
+    function renderProgress() {
+      const box = document.getElementById("progressBox");
+      if (!box) return;
+
+      const completed = getCompletedRaw();
+      const total = uniqueWords(vocabulary).length;
+      const completedExisting = uniqueWords(vocabulary).filter(w => completed.includes(wordKey(w.en))).length;
+      const basicTotal = vocabulary.filter(w => w.level === "BASIC").length;
+      const advancedTotal = vocabulary.filter(w => w.level === "ADVANCED").length;
+      const basicCompleted = vocabulary.filter(w => w.level === "BASIC" && completed.includes(wordKey(w.en))).length;
+      const advancedCompleted = vocabulary.filter(w => w.level === "ADVANCED" && completed.includes(wordKey(w.en))).length;
+
+      box.innerHTML = `
+        <strong>Total completed:</strong> ${completedExisting} / ${total}<br>
+        <strong>Basic:</strong> ${basicCompleted} / ${basicTotal}<br>
+        <strong>Advanced:</strong> ${advancedCompleted} / ${advancedTotal}<br>
+        <strong>Bookmarked:</strong> ${getBookmarkedWords().length}
+      `;
+    }
+
+    function uniqueWords(list) {
+      const seen = new Set();
+      const result = [];
+
+      list.forEach(word => {
+        const key = wordKey(word.en);
+        if (!seen.has(key)) {
+          seen.add(key);
+          result.push(word);
+        }
+      });
+
+      return result;
+    }
+
+    function wordKey(text) {
+      return normalizeEnglish(text);
     }
 
     function blankSentence(sentence, word) {
@@ -1657,8 +1775,11 @@
             vocabulary = parseCSVVocabulary(text);
           }
 
+          vocabulary = uniqueWords(vocabulary);
+
           alert(`Loaded ${vocabulary.length} TOEIC vocabulary items.`);
           renderHomeBookmarks();
+          renderProgress();
         } catch (err) {
           alert("Could not load file. Please check the format.");
           console.error(err);
