@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Exam Vocabulary Quiz Game</title>
+  <title>TOEIC Vocabulary Quiz</title>
+
   <style>
     * {
       box-sizing: border-box;
@@ -14,7 +15,7 @@
       margin: 0;
       min-height: 100vh;
       background:
-        radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 35%),
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.22), transparent 35%),
         linear-gradient(135deg, #020617, #0f172a 45%, #172554);
       color: #f8fafc;
       display: flex;
@@ -38,7 +39,7 @@
     }
 
     h1 {
-      font-size: 34px;
+      font-size: 35px;
       margin-bottom: 8px;
       letter-spacing: -0.8px;
     }
@@ -69,7 +70,7 @@
       color: #e2e8f0;
     }
 
-    select, input, button {
+    select, input, button, textarea {
       width: 100%;
       padding: 12px 14px;
       border-radius: 13px;
@@ -77,10 +78,17 @@
       font-size: 16px;
     }
 
-    select, input {
+    select, input, textarea {
       background: #f8fafc;
       color: #0f172a;
       outline: none;
+    }
+
+    textarea {
+      min-height: 130px;
+      resize: vertical;
+      font-family: Consolas, monospace;
+      font-size: 14px;
     }
 
     button {
@@ -177,14 +185,9 @@
       font-weight: 900;
     }
 
-    .tag.grade {
+    .tag.level {
       background: #ede9fe;
       color: #5b21b6;
-    }
-
-    .tag.section {
-      background: #dcfce7;
-      color: #166534;
     }
 
     .question-label {
@@ -198,14 +201,8 @@
       font-size: 42px;
       line-height: 1.15;
       font-weight: 950;
-      margin: 8px 0 10px;
+      margin: 8px 0 12px;
       word-break: break-word;
-    }
-
-    .question-sub {
-      color: #64748b;
-      line-height: 1.5;
-      margin-bottom: 18px;
     }
 
     .sentence-box {
@@ -271,12 +268,6 @@
       color: #14532d;
     }
 
-    .feedback.close {
-      display: block;
-      background: #fef9c3;
-      color: #713f12;
-    }
-
     .feedback.bad {
       display: block;
       background: #ffe4e6;
@@ -313,10 +304,6 @@
       line-height: 1.55;
     }
 
-    .review-item strong {
-      color: #0f172a;
-    }
-
     .final-score {
       font-size: 54px;
       font-weight: 950;
@@ -332,6 +319,20 @@
       font-size: 12px;
       font-weight: 900;
       margin-right: 4px;
+    }
+
+    .import-box {
+      margin-top: 18px;
+      background: rgba(30, 41, 59, 0.82);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      padding: 16px;
+      border-radius: 18px;
+    }
+
+    .import-box summary {
+      cursor: pointer;
+      font-weight: 900;
+      color: #e2e8f0;
     }
 
     @media (max-width: 720px) {
@@ -369,28 +370,19 @@
 <body>
   <div class="app">
     <div id="setup">
-      <h1>Exam Vocabulary Quiz Game</h1>
+      <h1>TOEIC Vocabulary Quiz</h1>
       <div class="subtitle">
-        Practice English vocabulary for TOEIC, TOEFL, EIKEN, and IELTS.
-        Choose an exam, section, question style, and direction. You start with 3 lives.
+        TOEIC-only vocabulary quiz. Choose Basic, Advanced, or Mixed.  
+        The same vocabulary will not appear twice in one play.
       </div>
 
       <div class="settings">
         <div class="field">
-          <label for="examSelect">Exam</label>
-          <select id="examSelect" onchange="updateSectionOptions()">
-            <option value="ALL">All Exams Mixed</option>
-            <option value="TOEIC">TOEIC</option>
-            <option value="TOEFL">TOEFL</option>
-            <option value="EIKEN">EIKEN</option>
-            <option value="IELTS">IELTS</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="sectionSelect">Part / Section</label>
-          <select id="sectionSelect">
-            <option value="ALL">All Sections Mixed</option>
+          <label for="levelSelect">Level</label>
+          <select id="levelSelect">
+            <option value="MIXED">Mixed: Basic + Advanced</option>
+            <option value="BASIC">Basic</option>
+            <option value="ADVANCED">Advanced</option>
           </select>
         </div>
 
@@ -416,24 +408,35 @@
           <select id="lengthSelect">
             <option value="lives">3 Lives Mode</option>
             <option value="20">20-Question Challenge</option>
-            <option value="endless">Endless Practice</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="sentenceSelect">Example Sentences</label>
-          <select id="sentenceSelect">
-            <option value="show">Show Example Sentence</option>
-            <option value="hide">Hide Example Sentence</option>
+            <option value="all">All Selected Words</option>
           </select>
         </div>
       </div>
 
       <button class="start-btn" onclick="startGame()">Start Game</button>
 
+      <details class="import-box">
+        <summary>Optional: Import TOEIC vocabulary CSV / JSON</summary>
+        <div class="note">
+          CSV format:
+          <br>
+          <code>level,en,ja,synonyms,definition,example_en,example_ja</code>
+          <br><br>
+          Use <code>|</code> between synonyms.
+        </div>
+
+        <input type="file" id="fileInput" accept=".csv,.json" style="margin-top:12px;" />
+        <button class="secondary" style="margin-top:10px;" onclick="loadVocabularyFile()">Load Vocabulary File</button>
+
+        <div class="note">
+          PDF cannot be read automatically inside a simple offline HTML file.  
+          If you convert your PDF vocabulary list to CSV, this game can import it.
+        </div>
+      </details>
+
       <div class="note">
-        Type-in mode uses loose judging: exact answers, common synonyms, small spelling mistakes, and Japanese keyword matches can be accepted.
-        This is still not real online AI, because everything is inside one HTML file.
+        Before answering, the game does not show Japanese translations, English definitions, or answer-side example translations.
+        Full explanation appears only after you answer.
       </div>
     </div>
 
@@ -444,25 +447,23 @@
           <div class="stat">Correct: <span id="correct">0</span></div>
           <div class="stat">Mistakes: <span id="mistakes">0</span></div>
           <div class="stat">Lives: <span id="lives">❤️❤️❤️</span></div>
-          <div class="stat">Question: <span id="questionCount">0</span></div>
+          <div class="stat">Question: <span id="questionCount">0</span>/<span id="totalCount">0</span></div>
         </div>
         <button class="secondary small" onclick="backToSetup()">Change Settings</button>
       </div>
 
       <div class="quiz-card">
         <div class="tag-row">
-          <span class="tag" id="examTag"></span>
-          <span class="tag section" id="sectionTag"></span>
-          <span class="tag grade" id="gradeTag"></span>
+          <span class="tag">TOEIC</span>
+          <span class="tag level" id="levelTag"></span>
         </div>
 
         <div class="question-label" id="questionLabel"></div>
         <div class="question-main" id="questionMain"></div>
-        <div class="question-sub" id="questionSub"></div>
 
         <div class="actions">
-          <button class="secondary small" onclick="speakCurrentWord()">🔊 Pronounce Word</button>
-          <button class="secondary small" onclick="speakCurrentSentence()">🔊 Read Sentence</button>
+          <button class="secondary small" onclick="speakCurrentWord()">🔊 Word</button>
+          <button class="secondary small" onclick="speakCurrentSentence()">🔊 Sentence</button>
         </div>
 
         <div id="sentenceBox" class="sentence-box"></div>
@@ -478,7 +479,7 @@
 
         <div class="actions">
           <button id="nextBtn" class="secondary hidden" onclick="nextQuestion()">Next Question</button>
-          <button id="endBtn" class="danger" onclick="endGame()">End Game</button>
+          <button class="danger" onclick="endGame()">End Game</button>
         </div>
       </div>
     </div>
@@ -502,343 +503,402 @@
   </div>
 
   <script>
-    const sectionOptions = {
-      ALL: ["ALL"],
-      TOEIC: ["ALL", "Part 5 Vocabulary", "Part 6 Context", "Part 7 Reading", "Business", "Travel / Schedule"],
-      TOEFL: ["ALL", "Academic", "Science", "Campus Life", "Reading"],
-      EIKEN: ["ALL", "Grade 2", "Pre-1", "Grade 1", "Essay / Society"],
-      IELTS: ["ALL", "Academic", "Essay", "Environment", "Society"]
-    };
-
-    const words = [
+    let vocabulary = [
       {
-        exam:"TOEIC", section:"Business", grade:"Common",
-        en:"invoice", ja:"請求書",
+        level:"BASIC",
+        en:"invoice",
+        ja:"請求書",
         synonyms:["bill"],
-        jaKeywords:["請求書","請求"],
-        definition:"a document that shows the amount of money to be paid",
-        sentence:"Please send the invoice to the accounting department by Friday.",
-        sentenceJa:"金曜日までに請求書を経理部へ送ってください。"
+        definition:"a document showing money that must be paid",
+        example_en:"Please send the invoice to the client by Friday.",
+        example_ja:"金曜日までに請求書を顧客へ送ってください。"
       },
       {
-        exam:"TOEIC", section:"Business", grade:"Common",
-        en:"reimburse", ja:"返金する、払い戻す",
-        synonyms:["refund","repay"],
-        jaKeywords:["返金","払い戻す","弁償"],
-        definition:"to pay money back to someone",
-        sentence:"The company will reimburse your travel expenses.",
-        sentenceJa:"会社はあなたの交通費を払い戻します。"
-      },
-      {
-        exam:"TOEIC", section:"Business", grade:"Common",
-        en:"authorize", ja:"許可する、権限を与える",
-        synonyms:["approve","permit"],
-        jaKeywords:["許可","認可","権限"],
-        definition:"to officially allow something",
-        sentence:"Only the manager can authorize this payment.",
-        sentenceJa:"この支払いを承認できるのはマネージャーだけです。"
-      },
-      {
-        exam:"TOEIC", section:"Part 5 Vocabulary", grade:"Common",
-        en:"efficient", ja:"効率的な",
-        synonyms:["productive","effective"],
-        jaKeywords:["効率","効率的"],
-        definition:"working well without wasting time or energy",
-        sentence:"The new system is more efficient than the old one.",
-        sentenceJa:"新しいシステムは古いものより効率的です。"
-      },
-      {
-        exam:"TOEIC", section:"Part 6 Context", grade:"Common",
-        en:"postpone", ja:"延期する",
-        synonyms:["delay"],
-        jaKeywords:["延期","遅らせる"],
-        definition:"to move an event to a later time",
-        sentence:"The meeting was postponed because of bad weather.",
-        sentenceJa:"悪天候のため会議は延期されました。"
-      },
-      {
-        exam:"TOEIC", section:"Part 7 Reading", grade:"Common",
-        en:"complaint", ja:"苦情、不満",
-        synonyms:["grievance"],
-        jaKeywords:["苦情","不満","クレーム"],
-        definition:"a statement that something is wrong or unsatisfactory",
-        sentence:"We received a complaint about the delayed shipment.",
-        sentenceJa:"私たちは発送の遅れについて苦情を受けました。"
-      },
-      {
-        exam:"TOEIC", section:"Travel / Schedule", grade:"Common",
-        en:"itinerary", ja:"旅行日程、旅程",
-        synonyms:["schedule","travel plan"],
-        jaKeywords:["旅程","旅行日程","日程"],
-        definition:"a plan of a trip",
-        sentence:"The itinerary includes three nights in Osaka.",
-        sentenceJa:"その旅程には大阪での3泊が含まれています。"
-      },
-      {
-        exam:"TOEIC", section:"Travel / Schedule", grade:"Common",
-        en:"reservation", ja:"予約",
+        level:"BASIC",
+        en:"reservation",
+        ja:"予約",
         synonyms:["booking"],
-        jaKeywords:["予約"],
-        definition:"an arrangement to have something kept for you",
-        sentence:"I made a reservation for two people at 7 p.m.",
-        sentenceJa:"午後7時に2名で予約しました。"
-      },
-
-      {
-        exam:"TOEFL", section:"Academic", grade:"Academic",
-        en:"hypothesis", ja:"仮説",
-        synonyms:["assumption","theory"],
-        jaKeywords:["仮説","仮定"],
-        definition:"an idea that may explain something and can be tested",
-        sentence:"The scientist tested the hypothesis through experiments.",
-        sentenceJa:"その科学者は実験を通して仮説を検証しました。"
+        definition:"an arrangement to keep something for later use",
+        example_en:"I made a reservation for two people.",
+        example_ja:"2名で予約しました。"
       },
       {
-        exam:"TOEFL", section:"Academic", grade:"Academic",
-        en:"subsequent", ja:"その後の、続いて起こる",
-        synonyms:["following","later"],
-        jaKeywords:["その後","続く","後の"],
-        definition:"happening after something else",
-        sentence:"Subsequent studies supported the original theory.",
-        sentenceJa:"その後の研究は最初の理論を支持しました。"
+        level:"BASIC",
+        en:"appointment",
+        ja:"予約、面会の約束",
+        synonyms:["meeting"],
+        definition:"an arrangement to meet someone at a certain time",
+        example_en:"I have an appointment with the manager this afternoon.",
+        example_ja:"今日の午後、マネージャーと面会の約束があります。"
       },
       {
-        exam:"TOEFL", section:"Academic", grade:"Academic",
-        en:"derive", ja:"由来する、引き出す",
-        synonyms:["come from","obtain"],
-        jaKeywords:["由来","得る","引き出す"],
-        definition:"to come from a particular source",
-        sentence:"Many English words derive from Latin.",
-        sentenceJa:"多くの英単語はラテン語に由来します。"
-      },
-      {
-        exam:"TOEFL", section:"Reading", grade:"Academic",
-        en:"predominant", ja:"支配的な、主要な",
-        synonyms:["dominant","main"],
-        jaKeywords:["支配的","主要","優勢"],
-        definition:"having the most power, influence, or importance",
-        sentence:"Agriculture was the predominant industry in the region.",
-        sentenceJa:"農業はその地域で主要な産業でした。"
-      },
-      {
-        exam:"TOEFL", section:"Science", grade:"Academic",
-        en:"habitat", ja:"生息地",
-        synonyms:["environment"],
-        jaKeywords:["生息地","環境"],
-        definition:"the natural home of an animal or plant",
-        sentence:"Wetlands provide an important habitat for many birds.",
-        sentenceJa:"湿地は多くの鳥にとって重要な生息地です。"
-      },
-      {
-        exam:"TOEFL", section:"Science", grade:"Academic",
-        en:"photosynthesis", ja:"光合成",
-        synonyms:[],
-        jaKeywords:["光合成"],
-        definition:"the process by which plants use light to make food",
-        sentence:"Plants produce oxygen through photosynthesis.",
-        sentenceJa:"植物は光合成によって酸素を作ります。"
-      },
-      {
-        exam:"TOEFL", section:"Campus Life", grade:"Academic",
-        en:"tuition", ja:"授業料",
-        synonyms:["fee"],
-        jaKeywords:["授業料","学費"],
-        definition:"money paid for instruction at a school",
-        sentence:"Tuition has increased at many universities.",
-        sentenceJa:"多くの大学で授業料が上がっています。"
-      },
-      {
-        exam:"TOEFL", section:"Campus Life", grade:"Academic",
-        en:"assignment", ja:"課題、宿題",
-        synonyms:["task","homework"],
-        jaKeywords:["課題","宿題","任務"],
-        definition:"a task given to someone",
-        sentence:"The professor gave us a difficult assignment.",
-        sentenceJa:"教授は私たちに難しい課題を出しました。"
-      },
-
-      {
-        exam:"EIKEN", section:"Grade 2", grade:"Grade 2",
-        en:"available", ja:"利用できる、手が空いている",
+        level:"BASIC",
+        en:"available",
+        ja:"利用できる、手が空いている",
         synonyms:["free","accessible"],
-        jaKeywords:["利用できる","空いている","入手できる"],
         definition:"able to be used or obtained",
-        sentence:"This service is available in many countries.",
-        sentenceJa:"このサービスは多くの国で利用できます。"
+        example_en:"The conference room is available after 3 p.m.",
+        example_ja:"会議室は午後3時以降利用できます。"
       },
       {
-        exam:"EIKEN", section:"Grade 2", grade:"Grade 2",
-        en:"avoid", ja:"避ける",
-        synonyms:["escape"],
-        jaKeywords:["避ける","回避"],
-        definition:"to keep away from something",
-        sentence:"You should avoid using your phone while walking.",
-        sentenceJa:"歩きながらスマホを使うのは避けるべきです。"
+        level:"BASIC",
+        en:"purchase",
+        ja:"購入する、購入",
+        synonyms:["buy"],
+        definition:"to buy something",
+        example_en:"Customers can purchase tickets online.",
+        example_ja:"顧客はオンラインでチケットを購入できます。"
       },
       {
-        exam:"EIKEN", section:"Grade 2", grade:"Grade 2",
-        en:"improve", ja:"改善する、上達する",
-        synonyms:["get better","enhance"],
-        jaKeywords:["改善","上達","良くする"],
-        definition:"to make something better",
-        sentence:"Reading every day can improve your vocabulary.",
-        sentenceJa:"毎日読むことで語彙力を向上させることができます。"
+        level:"BASIC",
+        en:"refund",
+        ja:"返金、返金する",
+        synonyms:["reimburse","repay"],
+        definition:"money given back to a customer",
+        example_en:"You can receive a refund within thirty days.",
+        example_ja:"30日以内であれば返金を受けられます。"
       },
       {
-        exam:"EIKEN", section:"Pre-1", grade:"Pre-1",
-        en:"substantial", ja:"かなりの、実質的な",
-        synonyms:["considerable","significant"],
-        jaKeywords:["かなり","実質的","相当"],
-        definition:"large in amount, value, or importance",
-        sentence:"The policy had a substantial effect on the economy.",
-        sentenceJa:"その政策は経済にかなりの影響を与えました。"
+        level:"BASIC",
+        en:"delay",
+        ja:"遅れ、遅延",
+        synonyms:["postpone"],
+        definition:"a situation in which something happens later than planned",
+        example_en:"The train delay affected many commuters.",
+        example_ja:"電車の遅延は多くの通勤者に影響しました。"
       },
       {
-        exam:"EIKEN", section:"Pre-1", grade:"Pre-1",
-        en:"legislation", ja:"法律、立法",
-        synonyms:["law"],
-        jaKeywords:["法律","立法","法令"],
-        definition:"a law or set of laws",
-        sentence:"New legislation was introduced to protect workers.",
-        sentenceJa:"労働者を守るために新しい法律が導入されました。"
+        level:"BASIC",
+        en:"schedule",
+        ja:"予定、予定を立てる",
+        synonyms:["timetable","plan"],
+        definition:"a plan that shows when things will happen",
+        example_en:"The meeting schedule was changed yesterday.",
+        example_ja:"会議の予定は昨日変更されました。"
       },
       {
-        exam:"EIKEN", section:"Grade 1", grade:"Grade 1",
-        en:"deteriorate", ja:"悪化する",
-        synonyms:["worsen","decline"],
-        jaKeywords:["悪化","低下"],
-        definition:"to become worse",
-        sentence:"The patient's condition began to deteriorate.",
-        sentenceJa:"患者の状態は悪化し始めました。"
+        level:"BASIC",
+        en:"employee",
+        ja:"従業員",
+        synonyms:["worker","staff member"],
+        definition:"a person who works for a company",
+        example_en:"All employees must attend the training session.",
+        example_ja:"全従業員は研修に参加しなければなりません。"
       },
       {
-        exam:"EIKEN", section:"Grade 1", grade:"Grade 1",
-        en:"scrutinize", ja:"精査する、詳しく調べる",
-        synonyms:["examine","inspect"],
-        jaKeywords:["精査","調べる","詳しく見る"],
-        definition:"to examine something very carefully",
-        sentence:"The committee scrutinized the report before publishing it.",
-        sentenceJa:"委員会は公表前にその報告書を精査しました。"
+        level:"BASIC",
+        en:"customer",
+        ja:"顧客、客",
+        synonyms:["client"],
+        definition:"a person who buys goods or services",
+        example_en:"The customer asked for a receipt.",
+        example_ja:"顧客はレシートを求めました。"
       },
       {
-        exam:"EIKEN", section:"Essay / Society", grade:"Pre-1",
-        en:"inequality", ja:"不平等、格差",
-        synonyms:["disparity"],
-        jaKeywords:["不平等","格差"],
-        definition:"an unfair difference between people or groups",
-        sentence:"Education can help reduce social inequality.",
-        sentenceJa:"教育は社会的不平等を減らす助けになります。"
+        level:"BASIC",
+        en:"receipt",
+        ja:"領収書、レシート",
+        synonyms:[],
+        definition:"a document proving that you paid for something",
+        example_en:"Please keep your receipt for future reference.",
+        example_ja:"後で確認できるようにレシートを保管してください。"
+      },
+      {
+        level:"BASIC",
+        en:"submit",
+        ja:"提出する",
+        synonyms:["hand in","turn in"],
+        definition:"to give a document or form to someone officially",
+        example_en:"Please submit the application form by Monday.",
+        example_ja:"月曜日までに申込書を提出してください。"
+      },
+      {
+        level:"BASIC",
+        en:"confirm",
+        ja:"確認する",
+        synonyms:["check","verify"],
+        definition:"to make sure something is correct",
+        example_en:"Please confirm your flight details before departure.",
+        example_ja:"出発前にフライトの詳細を確認してください。"
+      },
+      {
+        level:"BASIC",
+        en:"attend",
+        ja:"出席する、参加する",
+        synonyms:["participate in"],
+        definition:"to go to an event, meeting, or class",
+        example_en:"Several employees attended the workshop.",
+        example_ja:"数名の従業員がワークショップに参加しました。"
+      },
+      {
+        level:"BASIC",
+        en:"equipment",
+        ja:"設備、機器",
+        synonyms:["device","tools"],
+        definition:"the tools or machines needed for a particular activity",
+        example_en:"The office equipment will be replaced next month.",
+        example_ja:"オフィス機器は来月交換されます。"
+      },
+      {
+        level:"BASIC",
+        en:"branch",
+        ja:"支店、枝",
+        synonyms:["office"],
+        definition:"a local office of a company",
+        example_en:"The company opened a new branch in Osaka.",
+        example_ja:"その会社は大阪に新しい支店を開設しました。"
+      },
+      {
+        level:"BASIC",
+        en:"hire",
+        ja:"雇う",
+        synonyms:["employ","recruit"],
+        definition:"to give someone a job",
+        example_en:"The restaurant plans to hire more staff.",
+        example_ja:"そのレストランはさらにスタッフを雇う予定です。"
+      },
+      {
+        level:"BASIC",
+        en:"repair",
+        ja:"修理する、修理",
+        synonyms:["fix"],
+        definition:"to fix something broken",
+        example_en:"The technician repaired the printer.",
+        example_ja:"技術者がプリンターを修理しました。"
+      },
+      {
+        level:"BASIC",
+        en:"deliver",
+        ja:"配達する、届ける",
+        synonyms:["send","transport"],
+        definition:"to take goods or letters to a place",
+        example_en:"The package will be delivered tomorrow morning.",
+        example_ja:"荷物は明日の朝配達されます。"
+      },
+      {
+        level:"BASIC",
+        en:"location",
+        ja:"場所、所在地",
+        synonyms:["place","site"],
+        definition:"a place or position",
+        example_en:"The location of the seminar has changed.",
+        example_ja:"セミナーの場所が変更されました。"
       },
 
       {
-        exam:"IELTS", section:"Essay", grade:"Academic",
-        en:"advantage", ja:"利点、強み",
-        synonyms:["benefit","strength"],
-        jaKeywords:["利点","強み","メリット"],
-        definition:"something good or useful about a situation",
-        sentence:"One advantage of online learning is flexibility.",
-        sentenceJa:"オンライン学習の利点の一つは柔軟性です。"
+        level:"ADVANCED",
+        en:"itinerary",
+        ja:"旅行日程、旅程",
+        synonyms:["travel plan","schedule"],
+        definition:"a plan of a trip",
+        example_en:"The itinerary includes three nights in Singapore.",
+        example_ja:"その旅程にはシンガポールでの3泊が含まれています。"
       },
       {
-        exam:"IELTS", section:"Essay", grade:"Academic",
-        en:"drawback", ja:"欠点、不利な点",
-        synonyms:["disadvantage","weakness"],
-        jaKeywords:["欠点","不利","デメリット"],
-        definition:"a disadvantage or problem",
-        sentence:"A major drawback of city life is the high cost.",
-        sentenceJa:"都市生活の大きな欠点は費用の高さです。"
+        level:"ADVANCED",
+        en:"reimburse",
+        ja:"払い戻す、返金する",
+        synonyms:["refund","repay"],
+        definition:"to pay money back to someone",
+        example_en:"The company will reimburse your travel expenses.",
+        example_ja:"会社はあなたの出張費を払い戻します。"
       },
       {
-        exam:"IELTS", section:"Essay", grade:"Academic",
-        en:"justify", ja:"正当化する",
-        synonyms:["defend"],
-        jaKeywords:["正当化","弁明"],
-        definition:"to show that something is reasonable or right",
-        sentence:"It is difficult to justify spending so much money.",
-        sentenceJa:"それほど多くのお金を使うことを正当化するのは難しいです。"
+        level:"ADVANCED",
+        en:"authorize",
+        ja:"許可する、権限を与える",
+        synonyms:["approve","permit"],
+        definition:"to officially allow something",
+        example_en:"Only the supervisor can authorize this payment.",
+        example_ja:"この支払いを承認できるのは上司だけです。"
       },
       {
-        exam:"IELTS", section:"Essay", grade:"Academic",
-        en:"controversial", ja:"議論を呼ぶ、物議を醸す",
-        synonyms:["debatable"],
-        jaKeywords:["議論","物議","賛否"],
-        definition:"causing strong disagreement",
-        sentence:"The new law remains controversial.",
-        sentenceJa:"その新しい法律は今も議論を呼んでいます。"
+        level:"ADVANCED",
+        en:"implement",
+        ja:"実施する、導入する",
+        synonyms:["carry out","introduce"],
+        definition:"to put a plan or system into action",
+        example_en:"The company will implement a new security system.",
+        example_ja:"その会社は新しいセキュリティシステムを導入します。"
       },
       {
-        exam:"IELTS", section:"Academic", grade:"Academic",
-        en:"significant", ja:"重要な、かなりの",
-        synonyms:["important","considerable","substantial"],
-        jaKeywords:["重要","かなり","重大"],
-        definition:"large or important enough to be noticed",
-        sentence:"There was a significant increase in sales.",
-        sentenceJa:"売上に大幅な増加がありました。"
+        level:"ADVANCED",
+        en:"approximately",
+        ja:"およそ、約",
+        synonyms:["about","roughly"],
+        definition:"almost, but not exactly",
+        example_en:"The project will take approximately six months.",
+        example_ja:"そのプロジェクトは約6か月かかります。"
       },
       {
-        exam:"IELTS", section:"Environment", grade:"Academic",
-        en:"sustainable", ja:"持続可能な",
-        synonyms:["maintainable"],
-        jaKeywords:["持続可能"],
-        definition:"able to continue without causing serious damage",
-        sentence:"Countries need to develop sustainable energy sources.",
-        sentenceJa:"国々は持続可能なエネルギー源を開発する必要があります。"
+        level:"ADVANCED",
+        en:"eligible",
+        ja:"資格がある、適格な",
+        synonyms:["qualified"],
+        definition:"having the right qualifications",
+        example_en:"Employees are eligible for bonuses after one year.",
+        example_ja:"従業員は1年後にボーナスの対象となります。"
       },
       {
-        exam:"IELTS", section:"Environment", grade:"Academic",
-        en:"emission", ja:"排出、放出",
-        synonyms:["release"],
-        jaKeywords:["排出","放出"],
-        definition:"the act of sending gas, heat, light, etc. into the air",
-        sentence:"Carbon emissions contribute to climate change.",
-        sentenceJa:"炭素排出は気候変動の一因となります。"
+        level:"ADVANCED",
+        en:"mandatory",
+        ja:"義務的な、必須の",
+        synonyms:["required","compulsory"],
+        definition:"required by rule or law",
+        example_en:"Safety training is mandatory for all workers.",
+        example_ja:"安全研修は全従業員に必須です。"
       },
       {
-        exam:"IELTS", section:"Society", grade:"Academic",
-        en:"urbanization", ja:"都市化",
-        synonyms:[],
-        jaKeywords:["都市化"],
-        definition:"the process by which more people live in cities",
-        sentence:"Urbanization has changed family structures.",
-        sentenceJa:"都市化は家族構造を変化させました。"
+        level:"ADVANCED",
+        en:"renovation",
+        ja:"改装、改修",
+        synonyms:["remodeling"],
+        definition:"the process of improving a building",
+        example_en:"The hotel will be closed during the renovation.",
+        example_ja:"ホテルは改装中閉鎖されます。"
+      },
+      {
+        level:"ADVANCED",
+        en:"inventory",
+        ja:"在庫、棚卸し",
+        synonyms:["stock"],
+        definition:"goods that a company has available for sale or use",
+        example_en:"The manager checked the inventory before ordering supplies.",
+        example_ja:"マネージャーは備品を注文する前に在庫を確認しました。"
+      },
+      {
+        level:"ADVANCED",
+        en:"manufacturer",
+        ja:"製造業者、メーカー",
+        synonyms:["producer"],
+        definition:"a company that makes products",
+        example_en:"The manufacturer offers a one-year warranty.",
+        example_ja:"そのメーカーは1年間の保証を提供しています。"
+      },
+      {
+        level:"ADVANCED",
+        en:"complimentary",
+        ja:"無料の",
+        synonyms:["free"],
+        definition:"given free of charge",
+        example_en:"Guests can enjoy a complimentary breakfast.",
+        example_ja:"宿泊客は無料の朝食を楽しめます。"
+      },
+      {
+        level:"ADVANCED",
+        en:"prospective",
+        ja:"将来の、見込みのある",
+        synonyms:["potential"],
+        definition:"expected to become something in the future",
+        example_en:"The company invited prospective clients to the event.",
+        example_ja:"会社は見込み顧客をイベントに招待しました。"
+      },
+      {
+        level:"ADVANCED",
+        en:"accommodate",
+        ja:"収容する、対応する",
+        synonyms:["hold","adjust to"],
+        definition:"to provide space or meet someone's needs",
+        example_en:"The conference room can accommodate fifty people.",
+        example_ja:"その会議室は50人を収容できます。"
+      },
+      {
+        level:"ADVANCED",
+        en:"substantial",
+        ja:"かなりの、相当な",
+        synonyms:["considerable","significant"],
+        definition:"large in amount or importance",
+        example_en:"The company reported a substantial increase in sales.",
+        example_ja:"その会社は売上の大幅な増加を報告しました。"
+      },
+      {
+        level:"ADVANCED",
+        en:"comply",
+        ja:"従う、遵守する",
+        synonyms:["follow","obey"],
+        definition:"to act according to a rule or request",
+        example_en:"All employees must comply with safety regulations.",
+        example_ja:"全従業員は安全規則を遵守しなければなりません。"
+      },
+      {
+        level:"ADVANCED",
+        en:"specification",
+        ja:"仕様、明細",
+        synonyms:["requirement","detail"],
+        definition:"a detailed description of how something should be made",
+        example_en:"Please check the product specifications before ordering.",
+        example_ja:"注文前に製品仕様を確認してください。"
+      },
+      {
+        level:"ADVANCED",
+        en:"discrepancy",
+        ja:"不一致、食い違い",
+        synonyms:["difference","inconsistency"],
+        definition:"a difference between two things that should be the same",
+        example_en:"There was a discrepancy between the invoice and the order form.",
+        example_ja:"請求書と注文書の間に不一致がありました。"
+      },
+      {
+        level:"ADVANCED",
+        en:"facilitate",
+        ja:"促進する、容易にする",
+        synonyms:["make easier","assist"],
+        definition:"to make a process easier",
+        example_en:"The new software will facilitate communication between departments.",
+        example_ja:"新しいソフトウェアは部署間の連絡を容易にします。"
+      },
+      {
+        level:"ADVANCED",
+        en:"substitute",
+        ja:"代替品、代わりに使う",
+        synonyms:["replacement"],
+        definition:"something used instead of another thing",
+        example_en:"We need to find a substitute for the unavailable material.",
+        example_ja:"入手できない材料の代替品を見つける必要があります。"
+      },
+      {
+        level:"ADVANCED",
+        en:"durable",
+        ja:"耐久性のある",
+        synonyms:["long-lasting","strong"],
+        definition:"able to last for a long time",
+        example_en:"The company sells durable office furniture.",
+        example_ja:"その会社は耐久性のあるオフィス家具を販売しています。"
       }
     ];
 
-    let filteredWords = [];
+    let selectedWords = [];
+    let activeDeck = [];
     let currentWord = null;
     let score = 0;
     let correct = 0;
     let mistakes = 0;
     let lives = 3;
     let questionNumber = 0;
+    let totalQuestions = 0;
     let answered = false;
     let wrongAnswers = [];
-    let usedWords = [];
     let retryMode = false;
 
     const setup = document.getElementById("setup");
     const game = document.getElementById("game");
     const result = document.getElementById("result");
 
-    const examSelect = document.getElementById("examSelect");
-    const sectionSelect = document.getElementById("sectionSelect");
+    const levelSelect = document.getElementById("levelSelect");
     const modeSelect = document.getElementById("modeSelect");
     const directionSelect = document.getElementById("directionSelect");
     const lengthSelect = document.getElementById("lengthSelect");
-    const sentenceSelect = document.getElementById("sentenceSelect");
 
     const scoreEl = document.getElementById("score");
     const correctEl = document.getElementById("correct");
     const mistakesEl = document.getElementById("mistakes");
     const livesEl = document.getElementById("lives");
     const questionCountEl = document.getElementById("questionCount");
+    const totalCountEl = document.getElementById("totalCount");
 
-    const examTag = document.getElementById("examTag");
-    const sectionTag = document.getElementById("sectionTag");
-    const gradeTag = document.getElementById("gradeTag");
+    const levelTag = document.getElementById("levelTag");
     const questionLabel = document.getElementById("questionLabel");
     const questionMain = document.getElementById("questionMain");
-    const questionSub = document.getElementById("questionSub");
     const sentenceBox = document.getElementById("sentenceBox");
     const choiceArea = document.getElementById("choiceArea");
     const typeArea = document.getElementById("typeArea");
@@ -846,40 +906,23 @@
     const feedback = document.getElementById("feedback");
     const nextBtn = document.getElementById("nextBtn");
 
-    updateSectionOptions();
-
-    function updateSectionOptions() {
-      const selectedExam = examSelect.value;
-      const options = sectionOptions[selectedExam] || ["ALL"];
-      sectionSelect.innerHTML = "";
-
-      options.forEach(sec => {
-        const option = document.createElement("option");
-        option.value = sec;
-        option.textContent = sec === "ALL" ? "All Sections Mixed" : sec;
-        sectionSelect.appendChild(option);
-      });
-    }
-
     function startGame() {
       retryMode = false;
-      prepareWordList();
-      if (filteredWords.length < 4 && modeSelect.value === "choice") {
-        alert("Not enough words for multiple choice. Choose a wider exam or section.");
-        return;
-      }
-      if (filteredWords.length < 1) {
-        alert("No words found. Please choose another setting.");
+      selectedWords = filterWordsByLevel();
+
+      if (selectedWords.length < 4 && modeSelect.value === "choice") {
+        alert("Not enough words for multiple choice. Choose Mixed or import more words.");
         return;
       }
 
-      score = 0;
-      correct = 0;
-      mistakes = 0;
-      lives = 3;
-      questionNumber = 0;
-      wrongAnswers = [];
-      usedWords = [];
+      if (selectedWords.length < 1) {
+        alert("No vocabulary found.");
+        return;
+      }
+
+      resetGameState();
+      activeDeck = shuffle(selectedWords);
+      totalQuestions = getTotalQuestions();
 
       setup.classList.add("hidden");
       result.classList.add("hidden");
@@ -889,15 +932,30 @@
       nextQuestion();
     }
 
-    function prepareWordList() {
-      const exam = examSelect.value;
-      const section = sectionSelect.value;
+    function filterWordsByLevel() {
+      const level = levelSelect.value;
+      if (level === "MIXED") return [...vocabulary];
+      return vocabulary.filter(w => w.level === level);
+    }
 
-      filteredWords = words.filter(w => {
-        const examMatch = exam === "ALL" || w.exam === exam;
-        const sectionMatch = section === "ALL" || w.section === section || w.grade === section;
-        return examMatch && sectionMatch;
-      });
+    function getTotalQuestions() {
+      if (lengthSelect.value === "20") {
+        return Math.min(20, activeDeck.length);
+      }
+      if (lengthSelect.value === "all") {
+        return activeDeck.length;
+      }
+      return activeDeck.length;
+    }
+
+    function resetGameState() {
+      score = 0;
+      correct = 0;
+      mistakes = 0;
+      lives = 3;
+      questionNumber = 0;
+      wrongAnswers = [];
+      answered = false;
     }
 
     function nextQuestion() {
@@ -913,8 +971,8 @@
       choiceArea.innerHTML = "";
       typeInput.value = "";
 
+      currentWord = activeDeck.shift();
       questionNumber++;
-      currentWord = pickWord();
 
       renderQuestion();
       updateStats();
@@ -922,37 +980,16 @@
 
     function shouldEndGame() {
       if (lives <= 0) return true;
+      if (activeDeck.length === 0) return true;
       if (lengthSelect.value === "20" && questionNumber >= 20) return true;
-      if (retryMode && usedWords.length >= filteredWords.length) return true;
       return false;
     }
 
-    function pickWord() {
-      if (retryMode) {
-        const remaining = filteredWords.filter(w => !usedWords.includes(w.en));
-        const picked = remaining[Math.floor(Math.random() * remaining.length)] || filteredWords[0];
-        usedWords.push(picked.en);
-        return picked;
-      }
-
-      if (lengthSelect.value === "20") {
-        const remaining = filteredWords.filter(w => !usedWords.includes(w.en));
-        const pool = remaining.length > 0 ? remaining : filteredWords;
-        const picked = pool[Math.floor(Math.random() * pool.length)];
-        usedWords.push(picked.en);
-        return picked;
-      }
-
-      return filteredWords[Math.floor(Math.random() * filteredWords.length)];
-    }
-
     function renderQuestion() {
-      examTag.textContent = currentWord.exam;
-      sectionTag.textContent = currentWord.section;
-      gradeTag.textContent = currentWord.grade;
+      levelTag.textContent = currentWord.level === "BASIC" ? "Basic" : "Advanced";
 
-      const mode = modeSelect.value;
       const direction = directionSelect.value;
+      const mode = modeSelect.value;
 
       if (mode === "blank") {
         renderBlankQuestion();
@@ -960,16 +997,20 @@
       }
 
       if (direction === "EN_TO_JA") {
-        questionLabel.textContent = "What does this English word mean in Japanese?";
+        questionLabel.textContent = "What does this TOEIC word mean in Japanese?";
         questionMain.textContent = currentWord.en;
-        questionSub.textContent = currentWord.definition;
+
+        sentenceBox.innerHTML = `
+          <strong>Example:</strong> ${currentWord.example_en}
+        `;
       } else {
         questionLabel.textContent = "What is the English word for this Japanese meaning?";
         questionMain.textContent = currentWord.ja;
-        questionSub.textContent = currentWord.definition;
-      }
 
-      renderSentence();
+        sentenceBox.innerHTML = `
+          <strong>日本語例文:</strong> ${currentWord.example_ja}
+        `;
+      }
 
       if (mode === "choice") {
         typeArea.classList.add("hidden");
@@ -983,13 +1024,11 @@
     }
 
     function renderBlankQuestion() {
-      questionLabel.textContent = "Fill in the blank with the correct English word.";
-      questionMain.textContent = blankSentence(currentWord.sentence, currentWord.en);
-      questionSub.textContent = "Japanese hint: " + currentWord.ja;
+      questionLabel.textContent = "Fill in the blank with the correct TOEIC word.";
+      questionMain.textContent = blankSentence(currentWord.example_en, currentWord.en);
 
       sentenceBox.innerHTML = `
-        <strong>Meaning:</strong> ${currentWord.definition}<br>
-        <strong>Japanese:</strong> ${currentWord.sentenceJa}
+        <strong>Japanese hint:</strong> ${currentWord.ja}
       `;
 
       choiceArea.classList.add("hidden");
@@ -997,29 +1036,11 @@
       setTimeout(() => typeInput.focus(), 100);
     }
 
-    function blankSentence(sentence, word) {
-      const regex = new RegExp("\\b" + escapeRegExp(word) + "\\b", "i");
-      return sentence.replace(regex, "______");
-    }
-
-    function renderSentence() {
-      if (sentenceSelect.value === "hide") {
-        sentenceBox.classList.add("hidden");
-        return;
-      }
-
-      sentenceBox.classList.remove("hidden");
-      sentenceBox.innerHTML = `
-        <strong>Example:</strong> ${currentWord.sentence}<br>
-        <strong>Japanese:</strong> ${currentWord.sentenceJa}
-      `;
-    }
-
     function renderChoices() {
       const direction = directionSelect.value;
       const correctAnswer = direction === "EN_TO_JA" ? currentWord.ja : currentWord.en;
 
-      let wrongPool = filteredWords
+      let wrongPool = selectedWords
         .filter(w => w.en !== currentWord.en)
         .map(w => direction === "EN_TO_JA" ? w.ja : w.en);
 
@@ -1046,7 +1067,7 @@
 
       if (selected === correctAnswer) {
         button.classList.add("correct");
-        handleCorrect("Perfect.");
+        handleCorrect("Correct.");
       } else {
         button.classList.add("wrong");
         handleWrong(selected, "Wrong choice.");
@@ -1065,10 +1086,8 @@
 
       const judgment = judgeTypedAnswer(userAnswer);
 
-      if (judgment.status === "correct") {
+      if (judgment.correct) {
         handleCorrect(judgment.message);
-      } else if (judgment.status === "close") {
-        handleWrong(userAnswer, judgment.message);
       } else {
         handleWrong(userAnswer, judgment.message);
       }
@@ -1077,8 +1096,8 @@
     }
 
     function judgeTypedAnswer(answer) {
-      const mode = modeSelect.value;
       const direction = directionSelect.value;
+      const mode = modeSelect.value;
 
       if (mode === "blank" || direction === "JA_TO_EN") {
         const user = normalizeEnglish(answer);
@@ -1086,32 +1105,28 @@
 
         for (const ans of acceptable) {
           if (user === ans) {
-            return { status: "correct", message: "Correct." };
+            return { correct: true, message: "Correct." };
           }
+
           if (nearlyEqual(user, ans)) {
-            return { status: "correct", message: "Accepted. There was a small spelling difference." };
+            return { correct: true, message: "Accepted. Small spelling difference." };
           }
         }
 
-        const closeWords = acceptable.filter(ans => user.includes(ans) || ans.includes(user));
-        if (closeWords.length > 0 && user.length >= 4) {
-          return { status: "close", message: "Close, but not accurate enough." };
-        }
-
-        return { status: "wrong", message: "The meaning or spelling is different." };
+        return { correct: false, message: "The English word is different." };
       }
 
       if (direction === "EN_TO_JA") {
         const userJa = normalizeJapanese(answer);
-        const acceptableJa = [currentWord.ja, ...currentWord.jaKeywords].map(normalizeJapanese);
+        const acceptableJa = [currentWord.ja].map(normalizeJapanese);
 
         for (const ans of acceptableJa) {
           if (userJa === ans || userJa.includes(ans) || ans.includes(userJa)) {
-            return { status: "correct", message: "Accepted. Your Japanese meaning is close enough." };
+            return { correct: true, message: "Accepted. Your Japanese meaning is close enough." };
           }
         }
 
-        return { status: "wrong", message: "The Japanese meaning is different." };
+        return { correct: false, message: "The Japanese meaning is different." };
       }
     }
 
@@ -1122,9 +1137,12 @@
 
       feedback.className = "feedback good";
       feedback.innerHTML = `
-        ${message}<br>
+        ${message}<br><br>
         <strong>${currentWord.en}</strong> = ${currentWord.ja}<br>
-        <span style="font-weight:normal;">${currentWord.sentence}</span>
+        <strong>Definition:</strong> ${currentWord.definition}<br>
+        <strong>Example:</strong> ${currentWord.example_en}<br>
+        <strong>Japanese:</strong> ${currentWord.example_ja}<br>
+        <strong>Synonyms:</strong> ${currentWord.synonyms.length ? currentWord.synonyms.join(", ") : "None"}
       `;
     }
 
@@ -1143,9 +1161,12 @@
       feedback.className = "feedback bad";
       feedback.innerHTML = `
         ${reason}<br>
-        Your answer: <strong>${escapeHtml(userAnswer || "")}</strong><br>
+        Your answer: <strong>${escapeHtml(userAnswer || "")}</strong><br><br>
         Correct answer: <strong>${currentWord.en}</strong> = ${currentWord.ja}<br>
-        <span style="font-weight:normal;">${currentWord.sentence}</span>
+        <strong>Definition:</strong> ${currentWord.definition}<br>
+        <strong>Example:</strong> ${currentWord.example_en}<br>
+        <strong>Japanese:</strong> ${currentWord.example_ja}<br>
+        <strong>Synonyms:</strong> ${currentWord.synonyms.length ? currentWord.synonyms.join(", ") : "None"}
       `;
     }
 
@@ -1155,6 +1176,7 @@
       mistakesEl.textContent = mistakes;
       livesEl.textContent = "❤️".repeat(lives) + "🖤".repeat(3 - lives);
       questionCountEl.textContent = questionNumber;
+      totalCountEl.textContent = totalQuestions;
     }
 
     function endGame() {
@@ -1166,13 +1188,13 @@
 
       let message = "";
       if (score >= 20) {
-        message = "Excellent. You answered many words correctly.";
+        message = "Excellent. You answered many TOEIC words correctly.";
       } else if (score >= 10) {
         message = "Good job. Review your wrong answers and retry them.";
       } else if (score >= 5) {
-        message = "Not bad, but you need more repetition.";
+        message = "Not bad, but repetition is needed.";
       } else {
-        message = "You should start with a smaller section and repeat it carefully.";
+        message = "Start with Basic level and repeat the wrong words.";
       }
 
       document.getElementById("finalMessage").textContent =
@@ -1180,8 +1202,7 @@
 
       renderReview();
 
-      const retryBtn = document.getElementById("retryWrongBtn");
-      retryBtn.classList.toggle("hidden", wrongAnswers.length === 0);
+      document.getElementById("retryWrongBtn").classList.toggle("hidden", wrongAnswers.length === 0);
     }
 
     function renderReview() {
@@ -1199,16 +1220,16 @@
         div.className = "review-item";
         div.innerHTML = `
           <div>
-            <span class="pill">${w.exam}</span>
-            <span class="pill">${w.section}</span>
-            <span class="pill">${w.grade}</span>
+            <span class="pill">TOEIC</span>
+            <span class="pill">${w.level}</span>
           </div>
           <strong>${w.en}</strong> = ${w.ja}<br>
           Your answer: <strong>${escapeHtml(item.userAnswer)}</strong><br>
           Reason: ${item.reason}<br>
           Definition: ${w.definition}<br>
-          Example: ${w.sentence}<br>
-          Japanese: ${w.sentenceJa}
+          Example: ${w.example_en}<br>
+          Japanese: ${w.example_ja}<br>
+          Synonyms: ${w.synonyms.length ? w.synonyms.join(", ") : "None"}
         `;
         reviewList.appendChild(div);
       });
@@ -1227,19 +1248,16 @@
 
       if (wrongUnique.length === 0) return;
 
-      filteredWords = wrongUnique;
+      selectedWords = wrongUnique;
+      activeDeck = shuffle(wrongUnique);
       retryMode = true;
+      totalQuestions = activeDeck.length;
 
-      score = 0;
-      correct = 0;
-      mistakes = 0;
-      lives = 3;
-      questionNumber = 0;
-      wrongAnswers = [];
-      usedWords = [];
+      resetGameState();
 
       result.classList.add("hidden");
       game.classList.remove("hidden");
+
       updateStats();
       nextQuestion();
     }
@@ -1261,7 +1279,7 @@
 
     function speakCurrentSentence() {
       if (!currentWord) return;
-      speak(currentWord.sentence);
+      speak(currentWord.example_en);
     }
 
     function speak(text) {
@@ -1269,11 +1287,17 @@
         alert("Speech synthesis is not supported in this browser.");
         return;
       }
+
       speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "en-US";
       utterance.rate = 0.9;
       speechSynthesis.speak(utterance);
+    }
+
+    function blankSentence(sentence, word) {
+      const regex = new RegExp("\\b" + escapeRegExp(word) + "\\b", "i");
+      return sentence.replace(regex, "______");
     }
 
     function normalizeEnglish(text) {
@@ -1352,6 +1376,116 @@
 
     function escapeRegExp(string) {
       return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function loadVocabularyFile() {
+      const fileInput = document.getElementById("fileInput");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert("Please choose a CSV or JSON file.");
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        try {
+          const text = e.target.result;
+
+          if (file.name.toLowerCase().endsWith(".json")) {
+            const imported = JSON.parse(text);
+            vocabulary = normalizeImportedVocabulary(imported);
+          } else {
+            vocabulary = parseCSVVocabulary(text);
+          }
+
+          alert(`Loaded ${vocabulary.length} TOEIC vocabulary items.`);
+        } catch (err) {
+          alert("Could not load file. Please check the format.");
+          console.error(err);
+        }
+      };
+
+      reader.readAsText(file);
+    }
+
+    function normalizeImportedVocabulary(data) {
+      if (!Array.isArray(data)) {
+        throw new Error("JSON must be an array.");
+      }
+
+      return data.map(item => ({
+        level: normalizeLevel(item.level),
+        en: item.en || "",
+        ja: item.ja || "",
+        synonyms: Array.isArray(item.synonyms)
+          ? item.synonyms
+          : String(item.synonyms || "").split("|").filter(Boolean),
+        definition: item.definition || "",
+        example_en: item.example_en || "",
+        example_ja: item.example_ja || ""
+      })).filter(item => item.en && item.ja);
+    }
+
+    function parseCSVVocabulary(csv) {
+      const lines = csv.split(/\r?\n/).filter(line => line.trim());
+      const header = lines.shift().split(",").map(h => h.trim());
+
+      const required = ["level","en","ja","synonyms","definition","example_en","example_ja"];
+
+      required.forEach(col => {
+        if (!header.includes(col)) {
+          throw new Error("Missing column: " + col);
+        }
+      });
+
+      return lines.map(line => {
+        const values = splitCSVLine(line);
+        const obj = {};
+
+        header.forEach((h, i) => {
+          obj[h] = values[i] || "";
+        });
+
+        return {
+          level: normalizeLevel(obj.level),
+          en: obj.en,
+          ja: obj.ja,
+          synonyms: obj.synonyms ? obj.synonyms.split("|").map(s => s.trim()).filter(Boolean) : [],
+          definition: obj.definition,
+          example_en: obj.example_en,
+          example_ja: obj.example_ja
+        };
+      }).filter(item => item.en && item.ja);
+    }
+
+    function splitCSVLine(line) {
+      const result = [];
+      let current = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === "," && !inQuotes) {
+          result.push(current.trim());
+          current = "";
+        } else {
+          current += char;
+        }
+      }
+
+      result.push(current.trim());
+      return result.map(v => v.replace(/^"|"$/g, ""));
+    }
+
+    function normalizeLevel(level) {
+      const l = String(level || "").toUpperCase();
+      if (l.includes("ADV")) return "ADVANCED";
+      return "BASIC";
     }
 
     typeInput.addEventListener("keydown", function(e) {
