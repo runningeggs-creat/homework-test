@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TOEIC Vocabulary Quiz Endless</title>
+
+  <title>TOEIC Vocabulary Quiz - Endless</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
   <style>
     * {
@@ -26,7 +30,7 @@
 
     .app {
       width: 100%;
-      max-width: 1100px;
+      max-width: 1120px;
       background: rgba(15, 23, 42, 0.96);
       border: 1px solid rgba(148, 163, 184, 0.24);
       border-radius: 26px;
@@ -70,7 +74,7 @@
       color: #e2e8f0;
     }
 
-    select, input, button {
+    select, input, button, textarea {
       width: 100%;
       padding: 12px 14px;
       border-radius: 13px;
@@ -78,10 +82,17 @@
       font-size: 16px;
     }
 
-    select, input {
+    select, input, textarea {
       background: #f8fafc;
       color: #0f172a;
       outline: none;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+      font-family: Consolas, monospace;
+      font-size: 14px;
     }
 
     button {
@@ -128,6 +139,12 @@
       font-size: 14px;
     }
 
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     .start-btn {
       margin-top: 20px;
       font-size: 18px;
@@ -155,8 +172,29 @@
       border-radius: 18px;
     }
 
-    .home-panel h2 {
-      margin-bottom: 8px;
+    .progress-box {
+      background: rgba(15, 23, 42, 0.45);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      padding: 14px;
+      border-radius: 14px;
+      color: #cbd5e1;
+      line-height: 1.6;
+      margin-top: 12px;
+    }
+
+    .loader-box {
+      background: rgba(30, 41, 59, 0.82);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      padding: 18px;
+      border-radius: 18px;
+      margin-bottom: 18px;
+    }
+
+    .loader-status {
+      margin-top: 12px;
+      color: #bae6fd;
+      line-height: 1.6;
+      font-weight: 700;
     }
 
     .top-bar {
@@ -372,36 +410,12 @@
       margin-bottom: 4px;
     }
 
-    .import-box {
-      margin-top: 18px;
-      background: rgba(30, 41, 59, 0.82);
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      padding: 16px;
-      border-radius: 18px;
-    }
-
-    .import-box summary {
-      cursor: pointer;
-      font-weight: 900;
-      color: #e2e8f0;
-    }
-
     .empty-message {
       color: #cbd5e1;
       background: rgba(15, 23, 42, 0.4);
       border: 1px dashed rgba(148, 163, 184, 0.32);
       padding: 14px;
       border-radius: 14px;
-      line-height: 1.6;
-      margin-top: 12px;
-    }
-
-    .progress-box {
-      background: rgba(15, 23, 42, 0.45);
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      padding: 14px;
-      border-radius: 14px;
-      color: #cbd5e1;
       line-height: 1.6;
       margin-top: 12px;
     }
@@ -445,10 +459,37 @@
 <body>
   <div class="app">
     <div id="setup">
-      <h1>TOIC Vocabulary Quiz</h1>
+      <h1>TOEIC Vocabulary Quiz</h1>
+
       <div class="subtitle">
-        Endless TOEIC vocabulary practice. The game continues until you press End Game or lose all 3 lives.
-        Correctly answered words are saved as completed and skipped in future plays by default.
+        Endless TOEIC vocabulary practice based on your 出るボ list.
+        The game continues until you press End Game or lose all 3 lives.
+        No repeated words appear in one run.
+      </div>
+
+      <div class="loader-box">
+        <h2>1. Load 出るボ List</h2>
+
+        <div class="note">
+          Choose your <strong>出るボ一覧.pdf</strong>.  
+          This PDF is image-based, so the browser will OCR it first. It may take a few minutes.
+        </div>
+
+        <input type="file" id="pdfInput" accept="application/pdf" />
+
+        <div class="actions">
+          <button onclick="loadPdfVocabulary()">Load PDF Vocabulary</button>
+          <button class="secondary" onclick="loadPastedVocabulary()">Load Pasted TSV</button>
+        </div>
+
+        <textarea id="manualTsv" placeholder="Optional fallback TSV format:
+1	product	製品
+2	employ	雇う
+3	business	会社"></textarea>
+
+        <div id="loaderStatus" class="loader-status">
+          Loaded vocabulary: <span id="loadedCount">0</span> words.
+        </div>
       </div>
 
       <div class="settings">
@@ -456,8 +497,8 @@
           <label for="levelSelect">Level</label>
           <select id="levelSelect">
             <option value="MIXED">Mixed: Basic + Advanced</option>
-            <option value="BASIC">Basic</option>
-            <option value="ADVANCED">Advanced</option>
+            <option value="BASIC">Basic: No. 1–500</option>
+            <option value="ADVANCED">Advanced: No. 501–990</option>
             <option value="BOOKMARKS">Bookmarked Words Only</option>
           </select>
         </div>
@@ -494,16 +535,20 @@
         <div class="home-panel">
           <h2>📘 Study Progress</h2>
           <div id="progressBox" class="progress-box"></div>
+
           <div class="actions">
             <button class="danger" onclick="clearCompletedWords()">Reset Completed Words</button>
           </div>
+
           <div class="note">
-            Completed words are words you answered correctly. When “Skip completed words” is selected, they will not appear again in later plays.
+            Completed words are words you answered correctly. When “Skip completed words” is selected,
+            completed words will not appear again in later plays.
           </div>
         </div>
 
         <div class="home-panel">
           <h2>⭐ Bookmarked Words</h2>
+
           <div class="note">
             Bookmark any word during the quiz, even if you answered it correctly.
           </div>
@@ -517,27 +562,9 @@
         </div>
       </div>
 
-      <details class="import-box">
-        <summary>Optional: Import TOEIC vocabulary CSV / JSON</summary>
-        <div class="note">
-          CSV format:
-          <br>
-          <code>level,en,ja,synonyms,definition,example_en,example_ja</code>
-          <br><br>
-          Use <code>|</code> between synonyms.
-        </div>
-
-        <input type="file" id="fileInput" accept=".csv,.json" style="margin-top:12px;" />
-        <button class="secondary" style="margin-top:10px;" onclick="loadVocabularyFile()">Load Vocabulary File</button>
-
-        <div class="note">
-          For a truly large endless game, import a bigger vocabulary file. With only the built-in words, the game will stop when all unused words are completed.
-        </div>
-      </details>
-
       <div class="note">
-        Before answering, the game does not show Japanese translations, English definitions, or answer-side example translations.
-        Full explanation appears only after you answer.
+        Before answering, the game does not show Japanese translations or English explanations.
+        Full information appears only after you answer.
       </div>
     </div>
 
@@ -551,6 +578,7 @@
           <div class="stat">Question: <span id="questionCount">0</span></div>
           <div class="stat">Remaining: <span id="remainingCount">0</span></div>
         </div>
+
         <button class="secondary small" onclick="backToSetup()">Home</button>
       </div>
 
@@ -558,6 +586,7 @@
         <div class="tag-row">
           <span class="tag">TOEIC</span>
           <span class="tag level" id="levelTag"></span>
+          <span class="tag" id="numberTag"></span>
           <span class="tag bookmark hidden" id="bookmarkTag">Bookmarked</span>
         </div>
 
@@ -566,7 +595,6 @@
 
         <div class="actions">
           <button class="secondary small" onclick="speakCurrentWord()">🔊 Word</button>
-          <button class="secondary small" onclick="speakCurrentSentence()">🔊 Sentence</button>
           <button id="bookmarkBtn" class="warning small" onclick="toggleCurrentBookmark()">☆ Bookmark This Word</button>
         </div>
 
@@ -591,7 +619,9 @@
     <div id="result" class="hidden">
       <div class="result-card">
         <h2>Result</h2>
+
         <div class="final-score" id="finalScore">0</div>
+
         <p id="finalMessage"></p>
 
         <div class="actions">
@@ -607,376 +637,15 @@
   </div>
 
   <script>
-    const BOOKMARK_STORAGE_KEY = "toeic_vocab_quiz_bookmarks_v2";
-    const COMPLETED_STORAGE_KEY = "toeic_vocab_quiz_completed_v1";
+    const BOOKMARK_STORAGE_KEY = "toeic_derubo_bookmarks_v1";
+    const COMPLETED_STORAGE_KEY = "toeic_derubo_completed_v1";
+    const VOCAB_STORAGE_KEY = "toeic_derubo_vocabulary_v1";
 
-    let vocabulary = [
-      {
-        level:"BASIC",
-        en:"invoice",
-        ja:"請求書",
-        synonyms:["bill"],
-        definition:"a document showing money that must be paid",
-        example_en:"Please send the invoice to the client by Friday.",
-        example_ja:"金曜日までに請求書を顧客へ送ってください。"
-      },
-      {
-        level:"BASIC",
-        en:"reservation",
-        ja:"予約",
-        synonyms:["booking"],
-        definition:"an arrangement to keep something for later use",
-        example_en:"I made a reservation for two people.",
-        example_ja:"2名で予約しました。"
-      },
-      {
-        level:"BASIC",
-        en:"appointment",
-        ja:"予約、面会の約束",
-        synonyms:["meeting"],
-        definition:"an arrangement to meet someone at a certain time",
-        example_en:"I have an appointment with the manager this afternoon.",
-        example_ja:"今日の午後、マネージャーと面会の約束があります。"
-      },
-      {
-        level:"BASIC",
-        en:"available",
-        ja:"利用できる、手が空いている",
-        synonyms:["free","accessible"],
-        definition:"able to be used or obtained",
-        example_en:"The conference room is available after 3 p.m.",
-        example_ja:"会議室は午後3時以降利用できます。"
-      },
-      {
-        level:"BASIC",
-        en:"purchase",
-        ja:"購入する、購入",
-        synonyms:["buy"],
-        definition:"to buy something",
-        example_en:"Customers can purchase tickets online.",
-        example_ja:"顧客はオンラインでチケットを購入できます。"
-      },
-      {
-        level:"BASIC",
-        en:"refund",
-        ja:"返金、返金する",
-        synonyms:["reimburse","repay"],
-        definition:"money given back to a customer",
-        example_en:"You can receive a refund within thirty days.",
-        example_ja:"30日以内であれば返金を受けられます。"
-      },
-      {
-        level:"BASIC",
-        en:"delay",
-        ja:"遅れ、遅延",
-        synonyms:["postpone"],
-        definition:"a situation in which something happens later than planned",
-        example_en:"The train delay affected many commuters.",
-        example_ja:"電車の遅延は多くの通勤者に影響しました。"
-      },
-      {
-        level:"BASIC",
-        en:"schedule",
-        ja:"予定、予定を立てる",
-        synonyms:["timetable","plan"],
-        definition:"a plan that shows when things will happen",
-        example_en:"The meeting schedule was changed yesterday.",
-        example_ja:"会議の予定は昨日変更されました。"
-      },
-      {
-        level:"BASIC",
-        en:"employee",
-        ja:"従業員",
-        synonyms:["worker","staff member"],
-        definition:"a person who works for a company",
-        example_en:"All employees must attend the training session.",
-        example_ja:"全従業員は研修に参加しなければなりません。"
-      },
-      {
-        level:"BASIC",
-        en:"customer",
-        ja:"顧客、客",
-        synonyms:["client"],
-        definition:"a person who buys goods or services",
-        example_en:"The customer asked for a receipt.",
-        example_ja:"顧客はレシートを求めました。"
-      },
-      {
-        level:"BASIC",
-        en:"receipt",
-        ja:"領収書、レシート",
-        synonyms:[],
-        definition:"a document proving that you paid for something",
-        example_en:"Please keep your receipt for future reference.",
-        example_ja:"後で確認できるようにレシートを保管してください。"
-      },
-      {
-        level:"BASIC",
-        en:"submit",
-        ja:"提出する",
-        synonyms:["hand in","turn in"],
-        definition:"to give a document or form to someone officially",
-        example_en:"Please submit the application form by Monday.",
-        example_ja:"月曜日までに申込書を提出してください。"
-      },
-      {
-        level:"BASIC",
-        en:"confirm",
-        ja:"確認する",
-        synonyms:["check","verify"],
-        definition:"to make sure something is correct",
-        example_en:"Please confirm your flight details before departure.",
-        example_ja:"出発前にフライトの詳細を確認してください。"
-      },
-      {
-        level:"BASIC",
-        en:"attend",
-        ja:"出席する、参加する",
-        synonyms:["participate in"],
-        definition:"to go to an event, meeting, or class",
-        example_en:"Several employees attended the workshop.",
-        example_ja:"数名の従業員がワークショップに参加しました。"
-      },
-      {
-        level:"BASIC",
-        en:"equipment",
-        ja:"設備、機器",
-        synonyms:["device","tools"],
-        definition:"the tools or machines needed for a particular activity",
-        example_en:"The office equipment will be replaced next month.",
-        example_ja:"オフィス機器は来月交換されます。"
-      },
-      {
-        level:"BASIC",
-        en:"branch",
-        ja:"支店、枝",
-        synonyms:["office"],
-        definition:"a local office of a company",
-        example_en:"The company opened a new branch in Osaka.",
-        example_ja:"その会社は大阪に新しい支店を開設しました。"
-      },
-      {
-        level:"BASIC",
-        en:"hire",
-        ja:"雇う",
-        synonyms:["employ","recruit"],
-        definition:"to give someone a job",
-        example_en:"The restaurant plans to hire more staff.",
-        example_ja:"そのレストランはさらにスタッフを雇う予定です。"
-      },
-      {
-        level:"BASIC",
-        en:"repair",
-        ja:"修理する、修理",
-        synonyms:["fix"],
-        definition:"to fix something broken",
-        example_en:"The technician repaired the printer.",
-        example_ja:"技術者がプリンターを修理しました。"
-      },
-      {
-        level:"BASIC",
-        en:"deliver",
-        ja:"配達する、届ける",
-        synonyms:["send","transport"],
-        definition:"to take goods or letters to a place",
-        example_en:"The package will be delivered tomorrow morning.",
-        example_ja:"荷物は明日の朝配達されます。"
-      },
-      {
-        level:"BASIC",
-        en:"location",
-        ja:"場所、所在地",
-        synonyms:["place","site"],
-        definition:"a place or position",
-        example_en:"The location of the seminar has changed.",
-        example_ja:"セミナーの場所が変更されました。"
-      },
-
-      {
-        level:"ADVANCED",
-        en:"itinerary",
-        ja:"旅行日程、旅程",
-        synonyms:["travel plan","schedule"],
-        definition:"a plan of a trip",
-        example_en:"The itinerary includes three nights in Singapore.",
-        example_ja:"その旅程にはシンガポールでの3泊が含まれています。"
-      },
-      {
-        level:"ADVANCED",
-        en:"reimburse",
-        ja:"払い戻す、返金する",
-        synonyms:["refund","repay"],
-        definition:"to pay money back to someone",
-        example_en:"The company will reimburse your travel expenses.",
-        example_ja:"会社はあなたの出張費を払い戻します。"
-      },
-      {
-        level:"ADVANCED",
-        en:"authorize",
-        ja:"許可する、権限を与える",
-        synonyms:["approve","permit"],
-        definition:"to officially allow something",
-        example_en:"Only the supervisor can authorize this payment.",
-        example_ja:"この支払いを承認できるのは上司だけです。"
-      },
-      {
-        level:"ADVANCED",
-        en:"implement",
-        ja:"実施する、導入する",
-        synonyms:["carry out","introduce"],
-        definition:"to put a plan or system into action",
-        example_en:"The company will implement a new security system.",
-        example_ja:"その会社は新しいセキュリティシステムを導入します。"
-      },
-      {
-        level:"ADVANCED",
-        en:"approximately",
-        ja:"およそ、約",
-        synonyms:["about","roughly"],
-        definition:"almost, but not exactly",
-        example_en:"The project will take approximately six months.",
-        example_ja:"そのプロジェクトは約6か月かかります。"
-      },
-      {
-        level:"ADVANCED",
-        en:"eligible",
-        ja:"資格がある、適格な",
-        synonyms:["qualified"],
-        definition:"having the right qualifications",
-        example_en:"Employees are eligible for bonuses after one year.",
-        example_ja:"従業員は1年後にボーナスの対象となります。"
-      },
-      {
-        level:"ADVANCED",
-        en:"mandatory",
-        ja:"義務的な、必須の",
-        synonyms:["required","compulsory"],
-        definition:"required by rule or law",
-        example_en:"Safety training is mandatory for all workers.",
-        example_ja:"安全研修は全従業員に必須です。"
-      },
-      {
-        level:"ADVANCED",
-        en:"renovation",
-        ja:"改装、改修",
-        synonyms:["remodeling"],
-        definition:"the process of improving a building",
-        example_en:"The hotel will be closed during the renovation.",
-        example_ja:"ホテルは改装中閉鎖されます。"
-      },
-      {
-        level:"ADVANCED",
-        en:"inventory",
-        ja:"在庫、棚卸し",
-        synonyms:["stock"],
-        definition:"goods that a company has available for sale or use",
-        example_en:"The manager checked the inventory before ordering supplies.",
-        example_ja:"マネージャーは備品を注文する前に在庫を確認しました。"
-      },
-      {
-        level:"ADVANCED",
-        en:"manufacturer",
-        ja:"製造業者、メーカー",
-        synonyms:["producer"],
-        definition:"a company that makes products",
-        example_en:"The manufacturer offers a one-year warranty.",
-        example_ja:"そのメーカーは1年間の保証を提供しています。"
-      },
-      {
-        level:"ADVANCED",
-        en:"complimentary",
-        ja:"無料の",
-        synonyms:["free"],
-        definition:"given free of charge",
-        example_en:"Guests can enjoy a complimentary breakfast.",
-        example_ja:"宿泊客は無料の朝食を楽しめます。"
-      },
-      {
-        level:"ADVANCED",
-        en:"prospective",
-        ja:"将来の、見込みのある",
-        synonyms:["potential"],
-        definition:"expected to become something in the future",
-        example_en:"The company invited prospective clients to the event.",
-        example_ja:"会社は見込み顧客をイベントに招待しました。"
-      },
-      {
-        level:"ADVANCED",
-        en:"accommodate",
-        ja:"収容する、対応する",
-        synonyms:["hold","adjust to"],
-        definition:"to provide space or meet someone's needs",
-        example_en:"The conference room can accommodate fifty people.",
-        example_ja:"その会議室は50人を収容できます。"
-      },
-      {
-        level:"ADVANCED",
-        en:"substantial",
-        ja:"かなりの、相当な",
-        synonyms:["considerable","significant"],
-        definition:"large in amount or importance",
-        example_en:"The company reported a substantial increase in sales.",
-        example_ja:"その会社は売上の大幅な増加を報告しました。"
-      },
-      {
-        level:"ADVANCED",
-        en:"comply",
-        ja:"従う、遵守する",
-        synonyms:["follow","obey"],
-        definition:"to act according to a rule or request",
-        example_en:"All employees must comply with safety regulations.",
-        example_ja:"全従業員は安全規則を遵守しなければなりません。"
-      },
-      {
-        level:"ADVANCED",
-        en:"specification",
-        ja:"仕様、明細",
-        synonyms:["requirement","detail"],
-        definition:"a detailed description of how something should be made",
-        example_en:"Please check the product specifications before ordering.",
-        example_ja:"注文前に製品仕様を確認してください。"
-      },
-      {
-        level:"ADVANCED",
-        en:"discrepancy",
-        ja:"不一致、食い違い",
-        synonyms:["difference","inconsistency"],
-        definition:"a difference between two things that should be the same",
-        example_en:"There was a discrepancy between the invoice and the order form.",
-        example_ja:"請求書と注文書の間に不一致がありました。"
-      },
-      {
-        level:"ADVANCED",
-        en:"facilitate",
-        ja:"促進する、容易にする",
-        synonyms:["make easier","assist"],
-        definition:"to make a process easier",
-        example_en:"The new software will facilitate communication between departments.",
-        example_ja:"新しいソフトウェアは部署間の連絡を容易にします。"
-      },
-      {
-        level:"ADVANCED",
-        en:"substitute",
-        ja:"代替品、代わりに使う",
-        synonyms:["replacement"],
-        definition:"something used instead of another thing",
-        example_en:"We need to find a substitute for the unavailable material.",
-        example_ja:"入手できない材料の代替品を見つける必要があります。"
-      },
-      {
-        level:"ADVANCED",
-        en:"durable",
-        ja:"耐久性のある",
-        synonyms:["long-lasting","strong"],
-        definition:"able to last for a long time",
-        example_en:"The company sells durable office furniture.",
-        example_ja:"その会社は耐久性のあるオフィス家具を販売しています。"
-      }
-    ];
-
+    let vocabulary = [];
     let selectedWords = [];
     let activeDeck = [];
     let currentWord = null;
+
     let score = 0;
     let correct = 0;
     let mistakes = 0;
@@ -986,7 +655,6 @@
     let wrongAnswers = [];
     let retryMode = false;
     let lastGameWasBookmarks = false;
-    let sessionSeen = new Set();
 
     const setup = document.getElementById("setup");
     const game = document.getElementById("game");
@@ -1005,8 +673,10 @@
     const remainingCountEl = document.getElementById("remainingCount");
 
     const levelTag = document.getElementById("levelTag");
+    const numberTag = document.getElementById("numberTag");
     const bookmarkTag = document.getElementById("bookmarkTag");
     const bookmarkBtn = document.getElementById("bookmarkBtn");
+
     const questionLabel = document.getElementById("questionLabel");
     const questionMain = document.getElementById("questionMain");
     const sentenceBox = document.getElementById("sentenceBox");
@@ -1016,8 +686,247 @@
     const feedback = document.getElementById("feedback");
     const nextBtn = document.getElementById("nextBtn");
 
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+    loadSavedVocabulary();
     renderHomeBookmarks();
     renderProgress();
+
+    function loadSavedVocabulary() {
+      try {
+        const saved = localStorage.getItem(VOCAB_STORAGE_KEY);
+        if (!saved) return;
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          vocabulary = uniqueWords(parsed);
+          updateLoadedCount();
+        }
+      } catch {
+        vocabulary = [];
+      }
+    }
+
+    function saveVocabulary() {
+      localStorage.setItem(VOCAB_STORAGE_KEY, JSON.stringify(uniqueWords(vocabulary)));
+      updateLoadedCount();
+      renderProgress();
+    }
+
+    function updateLoadedCount() {
+      document.getElementById("loadedCount").textContent = vocabulary.length;
+    }
+
+    async function loadPdfVocabulary() {
+      const fileInput = document.getElementById("pdfInput");
+      const status = document.getElementById("loaderStatus");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert("Please choose 出るボ一覧.pdf first.");
+        return;
+      }
+
+      status.innerHTML = "Reading PDF...";
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const allItems = [];
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          status.innerHTML = `OCR in progress... Page ${pageNum} / ${pdf.numPages}. This may take a while.`;
+
+          const page = await pdf.getPage(pageNum);
+          const viewport = page.getViewport({ scale: 2.4 });
+
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d");
+
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+
+          await page.render({
+            canvasContext: context,
+            viewport: viewport
+          }).promise;
+
+          const imageDataUrl = canvas.toDataURL("image/png");
+
+          const ocrResult = await Tesseract.recognize(
+            imageDataUrl,
+            "eng+jpn",
+            {
+              logger: progress => {
+                if (progress.status === "recognizing text") {
+                  const pct = Math.round(progress.progress * 100);
+                  status.innerHTML = `OCR page ${pageNum} / ${pdf.numPages}: ${pct}%`;
+                }
+              }
+            }
+          );
+
+          const pageText = ocrResult.data.text;
+          const pageItems = parseOcrText(pageText);
+          allItems.push(...pageItems);
+        }
+
+        vocabulary = mergeVocabulary(vocabulary, allItems);
+        saveVocabulary();
+
+        status.innerHTML = `Loaded vocabulary: ${vocabulary.length} words.`;
+        alert(`Loaded ${vocabulary.length} words from the PDF. Check the count. If OCR missed many words, use the pasted TSV fallback.`);
+      } catch (error) {
+        console.error(error);
+        alert("PDF OCR failed. Please try the pasted TSV fallback.");
+        status.innerHTML = "PDF OCR failed.";
+      }
+    }
+
+    function parseOcrText(text) {
+      const lines = text
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(Boolean);
+
+      const items = [];
+
+      for (const line of lines) {
+        const cleaned = line
+          .replace(/[|｜]/g, " ")
+          .replace(/[□■口ロ]{2,}/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+
+        const match = cleaned.match(/(\d{1,3})\s+([A-Za-z][A-Za-z\s.'’\-]+?)\s+(.+)/);
+
+        if (!match) continue;
+
+        const number = Number(match[1]);
+        if (!number || number < 1 || number > 990) continue;
+
+        let en = match[2].trim();
+        let ja = match[3].trim();
+
+        en = cleanEnglishWord(en);
+        ja = cleanJapaneseMeaning(ja);
+
+        if (!en || !ja) continue;
+        if (en.length > 40) continue;
+        if (!/[A-Za-z]/.test(en)) continue;
+
+        items.push(makeWordObject(number, en, ja));
+      }
+
+      return uniqueWords(items);
+    }
+
+    function cleanEnglishWord(text) {
+      return String(text)
+        .replace(/[0-9]/g, "")
+        .replace(/[()[\]{}]/g, "")
+        .replace(/[~〜]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/^l(?=[a-z])/, "")
+        .replace(/^I(?=[a-z])/, "");
+    }
+
+    function cleanJapaneseMeaning(text) {
+      return String(text)
+        .replace(/[|｜]/g, "")
+        .replace(/[()（）]/g, "")
+        .replace(/名|動|形|副|前|接/g, "")
+        .replace(/\s+/g, "")
+        .replace(/^[:：,，.。]+/, "")
+        .trim();
+    }
+
+    function loadPastedVocabulary() {
+      const text = document.getElementById("manualTsv").value.trim();
+
+      if (!text) {
+        alert("Paste TSV first.");
+        return;
+      }
+
+      const items = parseTsv(text);
+
+      if (items.length === 0) {
+        alert("No valid vocabulary found. TSV format: number, English, Japanese.");
+        return;
+      }
+
+      vocabulary = mergeVocabulary(vocabulary, items);
+      saveVocabulary();
+
+      alert(`Loaded ${items.length} words. Total vocabulary: ${vocabulary.length}.`);
+      renderHomeBookmarks();
+      renderProgress();
+    }
+
+    function parseTsv(text) {
+      const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+      const items = [];
+
+      for (const line of lines) {
+        const parts = line.split(/\t|,/).map(p => p.trim()).filter(Boolean);
+
+        if (parts.length < 3) continue;
+
+        const number = Number(parts[0]);
+        const en = cleanEnglishWord(parts[1]);
+        const ja = cleanJapaneseMeaning(parts.slice(2).join(" "));
+
+        if (!number || !en || !ja) continue;
+
+        items.push(makeWordObject(number, en, ja));
+      }
+
+      return uniqueWords(items);
+    }
+
+    function makeWordObject(number, en, ja) {
+      return {
+        number,
+        level: number <= 500 ? "BASIC" : "ADVANCED",
+        en,
+        ja,
+        synonyms: [],
+        example_en: createSafeExample(en),
+        example_ja: "",
+        source: "Derubo"
+      };
+    }
+
+    function createSafeExample(en) {
+      return `Please review the TOEIC word "${en}" carefully.`;
+    }
+
+    function mergeVocabulary(oldList, newList) {
+      const map = new Map();
+
+      [...oldList, ...newList].forEach(item => {
+        const key = wordKey(item.en);
+        if (!key) return;
+
+        const existing = map.get(key);
+
+        if (!existing) {
+          map.set(key, item);
+        } else {
+          map.set(key, {
+            ...existing,
+            ...item,
+            number: existing.number || item.number,
+            ja: existing.ja || item.ja,
+            level: existing.level || item.level
+          });
+        }
+      });
+
+      return Array.from(map.values()).sort((a, b) => (a.number || 9999) - (b.number || 9999));
+    }
 
     function startGame() {
       retryMode = false;
@@ -1025,12 +934,12 @@
       selectedWords = filterWordsForGame();
 
       if (selectedWords.length < 4 && modeSelect.value === "choice") {
-        alert("Not enough words for multiple choice. Choose Mixed, include completed words, import more words, or use Type In mode.");
+        alert("Not enough words for multiple choice. Load more vocabulary, include completed words, choose Mixed, or use Type In mode.");
         return;
       }
 
       if (selectedWords.length < 1) {
-        alert("No available words. You may have completed all selected words. Import more words, include completed words, or reset completed history.");
+        alert("No available words. Load the PDF, include completed words, or reset completed history.");
         return;
       }
 
@@ -1087,7 +996,6 @@
       questionNumber = 0;
       wrongAnswers = [];
       answered = false;
-      sessionSeen = new Set();
     }
 
     function nextQuestion() {
@@ -1109,7 +1017,6 @@
       typeInput.value = "";
 
       currentWord = activeDeck.shift();
-      sessionSeen.add(wordKey(currentWord.en));
       questionNumber++;
 
       renderQuestion();
@@ -1123,7 +1030,7 @@
 
       document.getElementById("finalScore").textContent = score;
       document.getElementById("finalMessage").textContent =
-        "You completed all available unused words in this selection. To keep practicing without repeats, import more vocabulary or reset completed-word history.";
+        "You completed all available unused words in this selection. Load more words, include completed words, or reset completed-word history.";
 
       renderReview();
       document.getElementById("retryWrongBtn").classList.toggle("hidden", wrongAnswers.length === 0);
@@ -1131,6 +1038,7 @@
 
     function renderQuestion() {
       levelTag.textContent = currentWord.level === "BASIC" ? "Basic" : "Advanced";
+      numberTag.textContent = `No. ${currentWord.number || "?"}`;
       updateBookmarkUI();
 
       const direction = directionSelect.value;
@@ -1144,17 +1052,11 @@
       if (direction === "EN_TO_JA") {
         questionLabel.textContent = "What does this TOEIC word mean in Japanese?";
         questionMain.textContent = currentWord.en;
-
-        sentenceBox.innerHTML = `
-          <strong>Example:</strong> ${escapeHtml(currentWord.example_en)}
-        `;
+        sentenceBox.innerHTML = `<strong>Hint:</strong> No Japanese meaning is shown before answering.`;
       } else {
         questionLabel.textContent = "What is the English word for this Japanese meaning?";
         questionMain.textContent = currentWord.ja;
-
-        sentenceBox.innerHTML = `
-          <strong>日本語例文:</strong> ${escapeHtml(currentWord.example_ja)}
-        `;
+        sentenceBox.innerHTML = `<strong>Hint:</strong> Type the English word from the TOEIC list.`;
       }
 
       if (mode === "choice") {
@@ -1172,7 +1074,7 @@
       updateBookmarkUI();
 
       questionLabel.textContent = "Fill in the blank with the correct TOEIC word.";
-      questionMain.textContent = blankSentence(currentWord.example_en, currentWord.en);
+      questionMain.textContent = `Please review the TOEIC word "______" carefully.`;
 
       sentenceBox.innerHTML = `
         <strong>Japanese hint:</strong> ${escapeHtml(currentWord.ja)}
@@ -1188,10 +1090,11 @@
       const correctAnswer = direction === "EN_TO_JA" ? currentWord.ja : currentWord.en;
 
       let wrongPool = selectedWords
-        .filter(w => w.en !== currentWord.en)
+        .filter(w => wordKey(w.en) !== wordKey(currentWord.en))
         .map(w => direction === "EN_TO_JA" ? w.ja : w.en);
 
       wrongPool = shuffle([...new Set(wrongPool)]);
+
       const options = shuffle([correctAnswer, ...wrongPool.slice(0, 3)]);
 
       options.forEach(option => {
@@ -1290,11 +1193,9 @@
       feedback.className = "feedback good";
       feedback.innerHTML = `
         ${message}<br><br>
-        <strong>${escapeHtml(currentWord.en)}</strong> = ${escapeHtml(currentWord.ja)}<br>
-        <strong>Definition:</strong> ${escapeHtml(currentWord.definition)}<br>
-        <strong>Example:</strong> ${escapeHtml(currentWord.example_en)}<br>
-        <strong>Japanese:</strong> ${escapeHtml(currentWord.example_ja)}<br>
-        <strong>Synonyms:</strong> ${currentWord.synonyms.length ? escapeHtml(currentWord.synonyms.join(", ")) : "None"}<br><br>
+        <span class="pill">No. ${escapeHtml(currentWord.number || "?")}</span>
+        <span class="pill">${escapeHtml(currentWord.level)}</span><br>
+        <strong>${escapeHtml(currentWord.en)}</strong> = ${escapeHtml(currentWord.ja)}<br><br>
         <em>This word is now saved as completed. You can still bookmark it for review.</em>
       `;
     }
@@ -1315,11 +1216,9 @@
       feedback.innerHTML = `
         ${reason}<br>
         Your answer: <strong>${escapeHtml(userAnswer || "")}</strong><br><br>
-        Correct answer: <strong>${escapeHtml(currentWord.en)}</strong> = ${escapeHtml(currentWord.ja)}<br>
-        <strong>Definition:</strong> ${escapeHtml(currentWord.definition)}<br>
-        <strong>Example:</strong> ${escapeHtml(currentWord.example_en)}<br>
-        <strong>Japanese:</strong> ${escapeHtml(currentWord.example_ja)}<br>
-        <strong>Synonyms:</strong> ${currentWord.synonyms.length ? escapeHtml(currentWord.synonyms.join(", ")) : "None"}<br><br>
+        <span class="pill">No. ${escapeHtml(currentWord.number || "?")}</span>
+        <span class="pill">${escapeHtml(currentWord.level)}</span><br>
+        Correct answer: <strong>${escapeHtml(currentWord.en)}</strong> = ${escapeHtml(currentWord.ja)}<br><br>
         <em>This word was not saved as completed because you missed it.</em>
       `;
     }
@@ -1343,14 +1242,14 @@
       let message = "";
       if (lives <= 0) {
         message = "Game over. You lost all lives.";
+      } else if (score >= 50) {
+        message = "Excellent. You practiced a lot of TOEIC words.";
       } else if (score >= 20) {
-        message = "Excellent. You practiced many TOEIC words.";
-      } else if (score >= 10) {
         message = "Good job. Review wrong answers and bookmarked words.";
       } else if (score >= 5) {
         message = "Not bad. Keep going with uncompleted words.";
       } else {
-        message = "Start with Basic level and repeat carefully.";
+        message = "Start carefully and repeat often.";
       }
 
       document.getElementById("finalMessage").textContent =
@@ -1377,16 +1276,13 @@
         div.innerHTML = `
           <div>
             <span class="pill">TOEIC</span>
+            <span class="pill">No. ${escapeHtml(w.number || "?")}</span>
             <span class="pill">${escapeHtml(w.level)}</span>
             ${isBookmarked(w.en) ? '<span class="pill">Bookmarked</span>' : ''}
           </div>
           <strong>${escapeHtml(w.en)}</strong> = ${escapeHtml(w.ja)}<br>
           Your answer: <strong>${escapeHtml(item.userAnswer)}</strong><br>
-          Reason: ${escapeHtml(item.reason)}<br>
-          Definition: ${escapeHtml(w.definition)}<br>
-          Example: ${escapeHtml(w.example_en)}<br>
-          Japanese: ${escapeHtml(w.example_ja)}<br>
-          Synonyms: ${w.synonyms.length ? escapeHtml(w.synonyms.join(", ")) : "None"}
+          Reason: ${escapeHtml(item.reason)}
           <div class="actions">
             <button class="warning small" onclick="toggleBookmarkByWord('${escapeForAttribute(w.en)}')">
               ${isBookmarked(w.en) ? "★ Remove Bookmark" : "☆ Bookmark"}
@@ -1441,11 +1337,6 @@
     function speakCurrentWord() {
       if (!currentWord) return;
       speak(currentWord.en);
-    }
-
-    function speakCurrentSentence() {
-      if (!currentWord) return;
-      speak(currentWord.example_en);
     }
 
     function speak(text) {
@@ -1564,6 +1455,7 @@
             <div>
               <div>
                 <span class="pill">TOEIC</span>
+                <span class="pill">No. ${escapeHtml(word.number || "?")}</span>
                 <span class="pill">${escapeHtml(word.level)}</span>
                 ${isCompleted(word.en) ? '<span class="pill">Completed</span>' : ''}
               </div>
@@ -1573,12 +1465,6 @@
             <button class="danger small" onclick="toggleBookmarkByWord('${escapeForAttribute(word.en)}')">
               Remove
             </button>
-          </div>
-          <div style="margin-top:10px;">
-            <strong>Definition:</strong> ${escapeHtml(word.definition)}<br>
-            <strong>Example:</strong> ${escapeHtml(word.example_en)}<br>
-            <strong>Japanese:</strong> ${escapeHtml(word.example_ja)}<br>
-            <strong>Synonyms:</strong> ${word.synonyms.length ? escapeHtml(word.synonyms.join(", ")) : "None"}
           </div>
         `;
         list.appendChild(div);
@@ -1630,13 +1516,21 @@
 
       const completed = getCompletedRaw();
       const total = uniqueWords(vocabulary).length;
-      const completedExisting = uniqueWords(vocabulary).filter(w => completed.includes(wordKey(w.en))).length;
+
+      const completedExisting = uniqueWords(vocabulary)
+        .filter(w => completed.includes(wordKey(w.en))).length;
+
       const basicTotal = vocabulary.filter(w => w.level === "BASIC").length;
       const advancedTotal = vocabulary.filter(w => w.level === "ADVANCED").length;
-      const basicCompleted = vocabulary.filter(w => w.level === "BASIC" && completed.includes(wordKey(w.en))).length;
-      const advancedCompleted = vocabulary.filter(w => w.level === "ADVANCED" && completed.includes(wordKey(w.en))).length;
+
+      const basicCompleted = vocabulary
+        .filter(w => w.level === "BASIC" && completed.includes(wordKey(w.en))).length;
+
+      const advancedCompleted = vocabulary
+        .filter(w => w.level === "ADVANCED" && completed.includes(wordKey(w.en))).length;
 
       box.innerHTML = `
+        <strong>Loaded vocabulary:</strong> ${total}<br>
         <strong>Total completed:</strong> ${completedExisting} / ${total}<br>
         <strong>Basic:</strong> ${basicCompleted} / ${basicTotal}<br>
         <strong>Advanced:</strong> ${advancedCompleted} / ${advancedTotal}<br>
@@ -1650,6 +1544,8 @@
 
       list.forEach(word => {
         const key = wordKey(word.en);
+        if (!key) return;
+
         if (!seen.has(key)) {
           seen.add(key);
           result.push(word);
@@ -1661,11 +1557,6 @@
 
     function wordKey(text) {
       return normalizeEnglish(text);
-    }
-
-    function blankSentence(sentence, word) {
-      const regex = new RegExp("\\b" + escapeRegExp(word) + "\\b", "i");
-      return sentence.replace(regex, "______");
     }
 
     function normalizeEnglish(text) {
@@ -1726,10 +1617,12 @@
 
     function shuffle(array) {
       const copy = [...array];
+
       for (let i = copy.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [copy[i], copy[j]] = [copy[j], copy[i]];
       }
+
       return copy;
     }
 
@@ -1747,124 +1640,6 @@
         .replace(/\\/g, "\\\\")
         .replace(/'/g, "\\'")
         .replace(/"/g, "&quot;");
-    }
-
-    function escapeRegExp(string) {
-      return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    }
-
-    function loadVocabularyFile() {
-      const fileInput = document.getElementById("fileInput");
-      const file = fileInput.files[0];
-
-      if (!file) {
-        alert("Please choose a CSV or JSON file.");
-        return;
-      }
-
-      const reader = new FileReader();
-
-      reader.onload = function(e) {
-        try {
-          const text = e.target.result;
-
-          if (file.name.toLowerCase().endsWith(".json")) {
-            const imported = JSON.parse(text);
-            vocabulary = normalizeImportedVocabulary(imported);
-          } else {
-            vocabulary = parseCSVVocabulary(text);
-          }
-
-          vocabulary = uniqueWords(vocabulary);
-
-          alert(`Loaded ${vocabulary.length} TOEIC vocabulary items.`);
-          renderHomeBookmarks();
-          renderProgress();
-        } catch (err) {
-          alert("Could not load file. Please check the format.");
-          console.error(err);
-        }
-      };
-
-      reader.readAsText(file);
-    }
-
-    function normalizeImportedVocabulary(data) {
-      if (!Array.isArray(data)) {
-        throw new Error("JSON must be an array.");
-      }
-
-      return data.map(item => ({
-        level: normalizeLevel(item.level),
-        en: item.en || "",
-        ja: item.ja || "",
-        synonyms: Array.isArray(item.synonyms)
-          ? item.synonyms
-          : String(item.synonyms || "").split("|").filter(Boolean),
-        definition: item.definition || "",
-        example_en: item.example_en || "",
-        example_ja: item.example_ja || ""
-      })).filter(item => item.en && item.ja);
-    }
-
-    function parseCSVVocabulary(csv) {
-      const lines = csv.split(/\r?\n/).filter(line => line.trim());
-      const header = lines.shift().split(",").map(h => h.trim());
-
-      const required = ["level","en","ja","synonyms","definition","example_en","example_ja"];
-
-      required.forEach(col => {
-        if (!header.includes(col)) {
-          throw new Error("Missing column: " + col);
-        }
-      });
-
-      return lines.map(line => {
-        const values = splitCSVLine(line);
-        const obj = {};
-
-        header.forEach((h, i) => {
-          obj[h] = values[i] || "";
-        });
-
-        return {
-          level: normalizeLevel(obj.level),
-          en: obj.en,
-          ja: obj.ja,
-          synonyms: obj.synonyms ? obj.synonyms.split("|").map(s => s.trim()).filter(Boolean) : [],
-          definition: obj.definition,
-          example_en: obj.example_en,
-          example_ja: obj.example_ja
-        };
-      }).filter(item => item.en && item.ja);
-    }
-
-    function splitCSVLine(line) {
-      const result = [];
-      let current = "";
-      let inQuotes = false;
-
-      for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-
-        if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === "," && !inQuotes) {
-          result.push(current.trim());
-          current = "";
-        } else {
-          current += char;
-        }
-      }
-
-      result.push(current.trim());
-      return result.map(v => v.replace(/^"|"$/g, ""));
-    }
-
-    function normalizeLevel(level) {
-      const l = String(level || "").toUpperCase();
-      if (l.includes("ADV")) return "ADVANCED";
-      return "BASIC";
     }
 
     typeInput.addEventListener("keydown", function(e) {
