@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>TOEIC Vocabulary Quiz - Endless</title>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <title>TOEIC Derubo Vocabulary Quiz</title>
 
   <style>
     * {
@@ -74,7 +71,7 @@
       color: #e2e8f0;
     }
 
-    select, input, button, textarea {
+    select, input, button {
       width: 100%;
       padding: 12px 14px;
       border-radius: 13px;
@@ -82,17 +79,10 @@
       font-size: 16px;
     }
 
-    select, input, textarea {
+    select, input {
       background: #f8fafc;
       color: #0f172a;
       outline: none;
-    }
-
-    textarea {
-      min-height: 150px;
-      resize: vertical;
-      font-family: Consolas, monospace;
-      font-size: 14px;
     }
 
     button {
@@ -180,21 +170,6 @@
       color: #cbd5e1;
       line-height: 1.6;
       margin-top: 12px;
-    }
-
-    .loader-box {
-      background: rgba(30, 41, 59, 0.82);
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      padding: 18px;
-      border-radius: 18px;
-      margin-bottom: 18px;
-    }
-
-    .loader-status {
-      margin-top: 12px;
-      color: #bae6fd;
-      line-height: 1.6;
-      font-weight: 700;
     }
 
     .top-bar {
@@ -459,37 +434,11 @@
 <body>
   <div class="app">
     <div id="setup">
-      <h1>TOEIC Vocabulary Quiz</h1>
+      <h1>TOEIC Derubo Vocabulary Quiz</h1>
 
       <div class="subtitle">
-        Endless TOEIC vocabulary practice based on your 出るボ list.
-        The game continues until you press End Game or lose all 3 lives.
-        No repeated words appear in one run.
-      </div>
-
-      <div class="loader-box">
-        <h2>1. Load 出るボ List</h2>
-
-        <div class="note">
-          Choose your <strong>出るボ一覧.pdf</strong>.  
-          This PDF is image-based, so the browser will OCR it first. It may take a few minutes.
-        </div>
-
-        <input type="file" id="pdfInput" accept="application/pdf" />
-
-        <div class="actions">
-          <button onclick="loadPdfVocabulary()">Load PDF Vocabulary</button>
-          <button class="secondary" onclick="loadPastedVocabulary()">Load Pasted TSV</button>
-        </div>
-
-        <textarea id="manualTsv" placeholder="Optional fallback TSV format:
-1	product	製品
-2	employ	雇う
-3	business	会社"></textarea>
-
-        <div id="loaderStatus" class="loader-status">
-          Loaded vocabulary: <span id="loadedCount">0</span> words.
-        </div>
+        TOEIC-only endless vocabulary practice using the built-in 出るボ list.
+        The game continues until you press End Game, lose all 3 lives, or finish all available non-repeated words.
       </div>
 
       <div class="settings">
@@ -508,7 +457,6 @@
           <select id="modeSelect">
             <option value="choice">Multiple Choice</option>
             <option value="type">Type In</option>
-            <option value="blank">Fill in the Blank</option>
           </select>
         </div>
 
@@ -541,8 +489,7 @@
           </div>
 
           <div class="note">
-            Completed words are words you answered correctly. When “Skip completed words” is selected,
-            completed words will not appear again in later plays.
+            Correctly answered words are saved as completed. When “Skip completed words” is selected, those words will not appear again in later plays.
           </div>
         </div>
 
@@ -550,7 +497,7 @@
           <h2>⭐ Bookmarked Words</h2>
 
           <div class="note">
-            Bookmark any word during the quiz, even if you answered it correctly.
+            You can bookmark any word during the quiz, even if you answered correctly.
           </div>
 
           <div class="actions">
@@ -637,11 +584,1002 @@
   </div>
 
   <script>
-    const BOOKMARK_STORAGE_KEY = "toeic_derubo_bookmarks_v1";
-    const COMPLETED_STORAGE_KEY = "toeic_derubo_completed_v1";
-    const VOCAB_STORAGE_KEY = "toeic_derubo_vocabulary_v1";
+    const RAW_VOCAB = `1	product	製品
+2	employ	雇う
+3	business	会社
+4	customer	客
+5	monthly	毎月
+6	report	報告書
+7	schedule	予定に入れる
+8	mail	郵送する
+9	receive	受け取る
+10	visitor	観光客
+11	design	設計する
+12	repair	修理する
+13	conference	会議
+14	available	入手できる
+15	travel	旅行する
+16	discuss	話し合う
+17	department	部
+18	park	駐車する
+19	expect	人が来るのを待つ
+20	order	注文
+21	busy	込んでいる
+22	contact	連絡する
+23	leave	仕事を辞める
+24	board	乗り込む
+25	hour	営業時間
+26	line	列
+27	attend	出席する
+28	item	品物
+29	purpose	目的
+30	hold	手に持つ
+31	sure	確かな
+32	increase	増える
+33	let	〜に〜させる
+34	museum	博物館
+35	tour	見学
+36	wear	身に着けている
+37	position	職
+38	return	返す
+39	interested	興味がある
+40	president	社長
+41	print	印刷する
+42	look forward to	〜を楽しみにしている
+43	on sale	売られている
+44	follow	従う
+45	message	伝言
+46	presentation	プレゼンテーション
+47	sign	標識
+48	break	休憩
+49	document	書類
+50	in front of	〜の前に
+51	kind	種類
+52	head	長
+53	important	重要な
+54	equipment	機器
+55	ship	発送する
+56	arrive	届く
+57	holiday	休暇
+58	prepare	準備をする
+59	furniture	家具
+60	online	オンラインで
+61	stay	泊まる
+62	article	記事
+63	during	〜の間
+64	industry	産業
+65	prefer	好む
+66	either	〜または〜
+67	different	異なる
+68	record	記録
+69	usually	普通は
+70	international	国際的な
+71	study	調査
+72	enter	入る
+73	put on	身に付ける
+74	make sure	必ず〜する
+75	decide	決める
+76	expensive	値段が高い
+77	résumé	履歴書
+78	surprised	驚く
+79	bill	請求書
+80	community	共同体
+81	handle	行う
+82	advice	助言
+83	discount	割引
+84	hand	渡す
+85	stop by	立ち寄る
+86	tourist	観光客
+87	turn off	電気等を消す
+88	additional	追加の
+89	pleased	喜んで
+90	store	保管する
+91	manage	何とかやり遂げる
+92	marketing	マーケティング
+93	include	含む
+94	last	続く
+95	opening	職の空き
+96	direction	道案内
+97	cost	費用がかかる
+98	apply	応募する
+99	find	思う
+100	book	予約する
+101	place	注文・広告などを出す
+102	deliver	配達する
+103	experience	経験する
+104	complete	完成させる
+105	quality	質の高い
+106	develop	開発する
+107	accounting	会計
+108	survey	調査
+109	arrange	手はずを整える
+110	right away	すぐに
+111	current	現在の
+112	recently	最近
+113	research	調査
+114	successful	成功している
+115	lead	率いる
+116	address	話をする
+117	in person	直接
+118	request	求める
+119	select	選ぶ
+120	exhibit	展覧会
+121	package	小包
+122	assistant	アシスタント
+123	contract	契約
+124	fully	完全に
+125	supply	供給
+126	fill out	必要事項を記入する
+127	total	合計
+128	construction	建設
+129	introduce	紹介する
+130	list	載せる
+131	public	一般の人
+132	rate	料金
+133	due	期限である
+134	hire	雇う
+135	in charge of	〜を担当して
+136	material	資材
+137	performance	公演
+138	proposal	提案
+139	set up	設定する
+140	in advance	事前に
+141	confirm	確認する
+142	cover	報道する
+143	estimate	見積もり
+144	participate	参加する
+145	reservation	予約
+146	annual	毎年の
+147	create	作り出す
+148	note	注意する
+149	facility	施設
+150	mention	言う
+151	registration	登録
+152	respond	返答する
+153	excellent	素晴らしい
+154	improve	向上させる
+155	issue	問題
+156	limited	限られた
+157	promote	昇進させる
+158	take place	行われる
+159	call off	中止する
+160	according to	〜によると
+161	operate	運営する
+162	post	掲示する
+163	present	見せる
+164	reason	理由
+165	committee	委員会
+166	file	書類を整理する
+167	invitation	招待状
+168	maintenance	保守点検
+169	opportunity	機会
+170	reduce	下げる
+171	representative	代表者
+172	support	支援する
+173	charge	請求する
+174	interview	面接する
+175	satisfied	満足した
+176	suggestion	提案
+177	across	向こう側に
+178	historical	歴史に関する
+179	manufacturer	製造業者
+180	consultant	コンサルタント
+181	appointment	予約
+182	fit	入れる
+183	inform	知らせる
+184	advertise	宣伝する
+185	provide	提供する
+186	review	検討する
+187	editor	編集者
+188	corporate	企業の
+189	recommend	薦める
+190	indicate	示す
+191	publish	出版する
+192	statement	声明
+193	welcome	歓迎する
+194	sincerely	心から
+195	distribute	配布する
+196	accept	受け入れる
+197	financial	財政の
+198	promotion	販売促進
+199	organize	準備する
+200	renovate	改修する
+201	feature	展示する
+202	replace	後任となる
+203	investment	投資
+204	responsibility	責任
+205	submit	提出する
+206	require	求める
+207	purchase	購入する
+208	specialize	専門とする
+209	knowledge	知識
+210	topic	話題
+211	agree	同意する
+212	detail	細部
+213	degree	温度
+214	personal	個人的な
+215	side by side	並んで
+216	attract	人を集める
+217	audience	観客
+218	far	はるかに
+219	on display	陳列してある
+220	past	最近の
+221	series	シリーズ
+222	vehicle	車
+223	deal with	対処する
+224	depart	出発する
+225	plenty of	たくさんの〜
+226	stack	積み重ねる
+227	vacant	空いている
+228	absent	欠勤して
+229	foreign	外国の
+230	sightseeing	観光
+231	uniform	制服
+232	import	輸入する
+233	official	正式な
+234	remember	覚えている
+235	colleague	同僚
+236	in fact	実際には
+237	paragraph	段落
+238	plant	工場
+239	rent	借りる
+240	sample	実例
+241	unable	出来ない
+242	try on	試着する
+243	brochure	パンフレット
+244	excited	興奮している
+245	final	最終の
+246	popular	人気のある
+247	basic	基本的な
+248	compare	比べる
+249	press	押す
+250	regular	定期的な
+251	seem	〜のように見える
+252	along with	一緒に
+253	communication	コミュニケーション
+254	example	例
+255	instead	代わりに
+256	luggage	手荷物
+257	no longer	もう〜でない
+258	steel	鉄鋼
+259	climb	登る
+260	reschedule	予定を変更する
+261	afraid	残念ながら
+262	carry	商品を取り扱う
+263	continue	続く
+264	feedback	フィードバック
+265	former	前の
+266	range	幅
+267	borrow	借りる
+268	branch	支店
+269	couple of	2〜3の
+270	delicious	とてもおいしい
+271	repeat	繰り返す
+272	shift	仕事のシフト
+273	banquet	晩餐会
+274	cycle	自転車に乗る
+275	excuse	許す
+276	export	輸出する
+277	glad	うれしい
+278	would you mind	〜していただけますか
+279	shake	振る
+280	gain	増やす
+281	warn	警告する
+282	full-time	常勤の
+283	instrument	楽器
+284	adjust	調整する
+285	author	著者
+286	modern	現代の
+287	notice	気が付く
+288	out of order	故障している
+289	serious	本気の
+290	share	一緒に使う
+291	guess	思う
+292	plus	加えて
+293	version	版
+294	clerk	係員
+295	distance	距離
+296	hang	掛かる
+297	pass out	配る
+298	earn	収益を上げる
+299	overtime	残業
+300	amount	量
+301	chair	司会を務める
+302	describe	述べる
+303	previous	以前の
+304	security	警備
+305	collect	集める
+306	enclose	同封する
+307	retire	退職する
+308	serve	飲食物を出す
+309	agenda	議題
+310	at all times	常時
+311	actual	実際の
+312	announcement	お知らせ
+313	approve	承認する
+314	based	基づく
+315	effective	効果的な
+316	engineer	技術者
+317	explain	説明する
+318	frequently	頻繁に
+319	government	政府
+320	instruction	使用説明書
+321	reserve	予約する
+322	science	科学
+323	shortly	まもなく
+324	decrease	下がる
+325	outlet	店舗
+326	sponsor	後援する
+327	waste	無駄
+328	afford	〜する余裕がある
+329	capital	資本金
+330	view	意見
+331	benefit	恩恵
+332	conduct	行う
+333	correct	訂正する
+334	located	位置する
+335	pick up	車で迎えに行く
+336	technology	技術
+337	access	アクセスする
+338	consumer	消費者
+339	deadline	締め切り
+340	delay	遅らせる
+341	encourage	勧める
+342	release	公表する
+343	result in	もたらす
+344	subject to	〜する可能性がある
+345	condition	状態
+346	electronics	電子機器
+347	expand	広げる
+348	individual	個人
+349	method	方法
+350	missing	見つからない
+351	originally	初めは
+352	quickly	素早く
+353	reach	連絡する
+354	region	地域
+355	renew	更新する
+356	traffic	交通量
+357	beyond	越えて
+358	award	賞
+359	convention	会議
+360	fund	資金
+361	recipe	レシピ
+362	sign up	申し込む
+363	track	追跡する
+364	would rather	〜する方がよい
+365	as soon as possible	出来るだけ早く
+366	allow	認める
+367	appear	出る
+368	average	平均的な
+369	avoid	避ける
+370	convenient	都合のよい
+371	entertainment	娯楽
+372	figure	数字
+373	grand	はなばなしい
+374	in case of	〜の際は
+375	level	水準
+376	moment	短時間
+377	option	選択肢
+378	period	期間
+379	personnel	従業員
+380	procedure	手続き
+381	reasonable	手ごろな
+382	rely	頼る
+383	respect	尊敬
+384	search	探す
+385	sharp	ちょうどに
+386	suitable	適した
+387	upcoming	来たる
+388	commercial	商業的な
+389	extra	追加の
+390	human resources	人事
+391	reception	歓迎会
+392	stress	強調する
+393	transportation	交通機関
+394	trend	傾向
+395	value	価値
+396	profit	利益
+397	headquarters	本社
+398	refund	払い戻し
+399	senior	役職などが上位の
+400	by mistake	誤って
+401	cause	引き起こす
+402	decade	10年
+403	expire	期限が切れる
+404	income	収入
+405	immediate	早急な
+406	questionnaire	アンケート
+407	routine	習慣的に繰り返されること
+408	transfer	転勤する
+409	complicated	複雑な
+410	education	教育
+411	greet	出迎える
+412	influence	影響力
+413	lack	不足
+414	mild	温暖な
+415	normally	普通は
+416	physical	身体の
+417	polite	礼儀正しい
+418	population	人口
+419	pour	注ぐ
+420	instant	すぐの
+421	venue	会場
+422	resign	辞任する
+423	attach	添付する
+424	cancel	取り消す
+425	common	よくある
+426	conversation	会話
+427	economical	経済的な
+428	exchange	交換する
+429	expert	専門家
+430	extension	内線
+431	familiar	よく知っている
+432	host	主催する
+433	ride	車に乗せること
+434	seek	求める
+435	step down	辞任する
+436	techniques	手法
+437	temporary	臨時の
+438	factor	要因
+439	assemble	組み立てる
+440	attention	注意
+441	invoice	請求書
+442	prior to	〜の前に
+443	refreshment	軽い飲食物
+444	trust	信用
+445	plumber	配管工
+446	update	更新する
+447	upstairs	上の階に
+448	manner	態度
+449	consider	考える
+450	executive	重役
+451	means	手段
+452	regarding	〜に関する
+453	association	提携
+454	budget	予算
+455	contain	含む
+456	remain	〜のままでいる
+457	chemical	化学薬品
+458	demonstrate	実地説明をする
+459	qualified	適任である
+460	revise	修正する
+461	relaxed	くつろいだ
+462	upgrade	改良する
+463	accompany	同行する
+464	attitude	態度
+465	commute	通う
+466	competitive	競争力のある
+467	refuse	拒否する
+468	subscribe	定期購読する
+469	process	処理する
+470	comment	意見
+471	necessary	必要な
+472	respectively	それぞれ
+473	probable	起こりそうな
+474	efficient	効率のよい
+475	identify	あきらかにする
+476	particular	特定の
+477	relocate	移転する
+478	remind	思い出させる
+479	compared with	〜と比べて
+480	establish	設立する
+481	point out	指摘する
+482	property	不動産
+483	restore	修復する
+484	status	状況
+485	expense	出費
+486	focus	焦点を合わせる
+487	laboratory	研究所
+488	obtain	得る
+489	reputation	評判
+490	retail	小売
+491	contribute	寄付する
+492	convince	納得させる
+493	divide	分ける
+494	fine	罰金
+495	inquire	尋ねる
+496	specific	特定の
+497	stock	在庫
+498	aware	気が付いている
+499	broad	大まかな
+500	maximum	最大の
+501	aim	向ける
+502	cooperate	協力する
+503	quantity	量
+504	by accident	偶然
+505	launch	始める
+506	obvious	明らかな
+507	optimistic	楽観的な
+508	owe	〜のおかげである
+509	vision	考え
+510	withdraw	引き出す
+511	deliberately	わざと
+512	dismiss	解雇する
+513	glance	さっと見る
+514	ingredient	材料
+515	capable	能力がある
+516	conclusion	結論
+517	emergency	緊急事態
+518	load	積み込む
+519	punctual	時間を守る
+520	possibility	可能性
+521	journal	雑誌
+522	policy	規則
+523	appliance	電化製品
+524	approach	話を持ちかける
+525	standard	基準
+526	valid	有効な
+527	eager	強く望んでいる
+528	opinion	意見
+529	belongings	持ち物
+530	assignment	与えられた仕事
+531	innovative	革新的な
+532	supervise	監督する
+533	credit	功績があると認める
+534	various	さまざまな
+535	analysis	分析
+536	reject	却下する
+537	on behalf of	〜を代表して
+538	overlook	見逃す
+539	seal	封をする
+540	typical	典型的な
+541	code	規則
+542	connect	接続する
+543	general	大まかな
+544	nicely	うまく
+545	orientation	オリエンテーション
+546	positive	好意的な
+547	however	どれだけ〜であろうと
+548	whether	〜かどうか
+549	calculate	計算する
+550	lean	もたれかかる
+551	enable	可能にする
+552	despite	〜にもかかわらず
+553	media	メディア
+554	tax	税金
+555	trouble	困難
+556	wish	したい
+557	draw up	作成する
+558	formally	フォーマルに
+559	empty	空いている
+560	core	主要な
+561	crew	共同で作業をするチーム
+562	middle	中旬
+563	on foot	徒歩で
+564	overseas	海外で
+565	co-worker	同僚
+566	graduate	卒業する
+567	private	内密の
+568	tip	ヒント
+569	agriculture	農業
+570	railing	手すり
+571	theme	テーマ
+572	tie	つながり
+573	fond	好ましい
+574	be supposed to	〜することになっている
+575	related	関連のある
+576	confident	確信して
+577	I wonder if you	〜していただけませんか
+578	worth	価値がある
+579	enroll	申し込む
+580	environment	環境
+581	exactly	まったく
+582	ideal	理想的な
+583	precisely	ちょうどに
+584	suddenly	突然に
+585	capacity	定員
+586	admission	入場料
+587	advantage	利点
+588	anniversary	記念日
+589	candidate	候補者
+590	career	職業
+591	imagine	想像する
+592	perfect	最適な
+593	potential	潜在的な
+594	separate	別の
+595	apart from	〜以外に
+596	mechanical	機械的な
+597	rest	残り
+598	unique	珍しい
+599	disappointed	がっかりした
+600	modest	多くない
+601	ahead	先に
+602	fail	失敗する
+603	install	設置する
+604	memorandum	社内通達
+605	similar	似た
+606	content	中身
+607	guideline	指針
+608	neighborhood	地域
+609	patience	我慢
+610	tight	時間・金銭的に余裕のない
+611	impressed	感銘を受ける
+612	edge	端
+613	certain	確かな
+614	complaint	苦情
+615	concerned	心配する
+616	except	〜を除き
+617	fuel	燃料
+618	grant	助成金
+619	hesitate	遠慮する
+620	initial	初めの
+621	occasionally	たまに
+622	round	一連のもの
+623	shape	状態
+624	visual	視覚的な
+625	demand	需要
+626	gather	集まる
+627	coupon	クーポン券
+628	cross	渡る
+629	medicine	薬
+630	predict	予測する
+631	rank	ランク付けされる
+632	regret	残念ながら
+633	decorate	飾る
+634	agency	代理店
+635	apologize	謝る
+636	approximately	約
+637	architect	建築士
+638	besides	〜に加えて
+639	complimentary	無料の
+640	congratulations	おめでとう
+641	crowded	込み合っている
+642	depend	〜による
+643	even though	〜だけれども
+644	paperwork	書類仕事
+645	phase	段階
+646	praise	ほめる
+647	reliable	信頼できる
+648	weigh	重さを量る
+649	artificial	人工的な
+650	customs	税関
+651	defect	欠陥
+652	equal	等しい
+653	forecast	予測する
+654	link	つながり
+655	match	合う
+656	observe	見学する
+657	outstanding	未払いの
+658	amazing	驚くべき
+659	challenging	難しい
+660	comfortable	快適な
+661	crop	作物
+662	lease	賃貸契約
+663	vote	投票する
+664	warehouse	倉庫
+665	huge	とても大きな
+666	visible	見える
+667	bulk	大部分
+668	journey	旅
+669	stuck	動きが取れない
+670	legal	法律に関する
+671	sculpture	彫刻
+672	volunteer	自ら進んでする
+673	prop	立てかける
+674	appreciate	感謝する
+675	recognize	誰だか分かる
+676	consistent	一貫性のある
+677	alternative	代わりとなる
+678	automated	自動化された
+679	broadcast	放送する
+680	combine	兼ね備える
+681	consist of	〜構成されている
+682	critical	とても重要な
+683	definitely	必ず
+684	finding	調査結果
+685	intend	しようとする
+686	protective	保護用の
+687	refer	参照する
+688	remove	取り除く
+689	residential	居住の
+690	summarize	要約する
+691	thorough	徹底的な
+692	examine	細かく調べる
+693	contemporary	現代的な
+694	otherwise	そうでなければ
+695	experiment	実験
+696	interval	間隔
+697	proportion	割合
+698	recruit	採用する
+699	accurate	正確な
+700	difficulty	困難
+701	eligible	資格のある
+702	found	設立する
+703	involve	求められる
+704	notify	知らせる
+705	postpone	延期する
+706	proceed	進む
+707	significant	大きな
+708	warranty	保証
+709	assure	断言する
+710	athlete	スポーツ選手
+711	double	倍になる
+712	generous	手厚い
+713	monitor	観察する
+714	balance	残金
+715	exclusive	高級な
+716	situation	状況
+717	whereas	〜であるのに対して
+718	reimburse	払い戻す
+719	strict	厳しい
+720	appeal	好まれる
+721	bound	〜行きの
+722	essential	きわめて重要な
+723	fluent	流ちょうな
+724	negotiation	交渉
+725	occur	起こる
+726	workforce	労働人口
+727	stable	安定した
+728	aid	援助
+729	concerning	〜に関する
+730	emphasize	強調する
+731	honor	栄誉
+732	infer	推測する
+733	inventory	在庫
+734	major	重大な
+735	measure	対策
+736	progress	進歩
+737	remarkable	素晴らしい
+738	solution	解決法
+739	unfortunately	残念ながら
+740	celebrate	祝う
+741	hospitality	手厚いもてなし
+742	pharmacy	薬局
+743	primary	主な
+744	express	言い表す
+745	in accordance with	〜に則って
+746	modify	変更する
+747	on the whole	全体として
+748	practical	実用的な
+749	priority	優先事項
+750	rapidly	急速に
+751	ban	禁止する
+752	contrast	違い
+753	draft	原稿
+754	behave	行動する
+755	congested	混雑した
+756	panel	専門家の一団
+757	urge	強く勧める
+758	flexible	融通の利く
+759	acquire	得る
+760	assessment	評価
+761	briefly	手短に
+762	deposit	頭金
+763	entire	全体の
+764	especially	特に
+765	evaluate	評価する
+766	imply	暗に伝える
+767	merger	合併
+768	object	反対する
+769	premises	建物
+770	steadily	着実に
+771	concise	簡潔な
+772	constant	絶え間ない
+773	debate	議論
+774	decline	減る
+775	insurance	保険
+776	confusing	わかりにくい
+777	inspector	検査官
+778	merchandise	商品
+779	prevent	阻止する
+780	anticipate	予想する
+781	aspect	側面
+782	attempt	試みる
+783	claim	主張する
+784	comprehensive	完全な
+785	force	余儀なくさせる
+786	promise	約束する
+787	superior	優れている
+788	political	政治の
+789	sensitive	感度の良い
+790	social	社会の
+791	tentative	仮の
+792	advisable	望ましい
+793	argue	言い争う
+794	defend	正当性を主張する
+795	deserve	受けるのに値する
+796	element	要因
+797	border	国境
+798	extensive	幅広い
+799	function	職務
+800	global	世界的な
+801	judge	判断する
+802	real estate	不動産
+803	survive	生き残る
+804	traditional	伝統的な
+805	absolutely	まったく
+806	worldwide	世界中に
+807	favorable	好意的な
+808	length	長さ
+809	relatively	比較的に
+810	count on	頼りにする
+811	inconvenience	迷惑
+812	incorrect	不正確な
+813	mayor	市長
+814	statistics	統計値
+815	label	ラベルをつける
+816	memorable	印象的な
+817	nominate	候補に挙げる
+818	dramatic	劇的な
+819	persuade	説得する
+820	delighted	とても喜んでいる
+821	sufficient	十分な
+822	exhausted	疲れ果てた
+823	acknowledge	認める
+824	consequence	結果
+825	dispose of	処分する
+826	implement	実施する
+827	ensure	確実に行う
+828	component	部品
+829	contrary	反して
+830	appropriate	適切な
+831	determine	究明する
+832	evidence	証拠
+833	institution	機関
+834	municipal	市営の
+835	retain	保管する
+836	supplement	加算する
+837	generate	生み出す
+838	occupy	占める
+839	substitute	代わりをする
+840	mutual	お互いの
+841	enhance	高める
+842	existing	既存の
+843	explore	探索する
+844	clarify	明確にする
+845	complex	複雑な
+846	concentrate	集中する
+847	concept	概念
+848	dedicated	打ちこんでいる
+849	apprentice	見習い
+850	exposed	さらされた
+851	impact	影響
+852	numerous	数多くの
+853	settle	解決する
+854	attire	服装
+855	diversity	多様性
+856	inspire	意欲を掻き立てる
+857	transit	輸送
+858	multiple	多数の
+859	solve	解決する
+860	insert	入れる
+861	coordinate	まとめる
+862	suspend	一時的に止める
+863	compensate	補償する
+864	relevant	関係のある
+865	correspond	連絡する
+866	invent	発明する
+867	weaken	弱める
+868	translate	翻訳する
+869	commission	歩合
+870	sweep	掃く
+871	administrative	管理の
+872	deserted	人気のない
+873	prove	〜である
+874	severe	深刻な
+875	admire	称賛する
+876	destination	目的地
+877	disturb	邪魔をする
+878	vessel	船
+879	authorization	許可
+880	content	満足している
+881	conflict	対立
+882	accommodation	宿泊施設
+883	physician	医師
+884	strength	強み
+885	surrounding	周辺の
+886	transaction	取引
+887	coincidence	偶然
+888	confess	告白する
+889	conscious	意識的な
+890	convert	変換する
+891	donation	寄付
+892	elect	選出する
+893	fascinating	とても面白い
+894	grateful	感謝している
+895	insight	知識
+896	interactive	双方向性の
+897	itinerary	旅行日程
+898	omit	省く
+899	possess	持つ
+900	prompt	素早い
+901	reverse	裏側の
+902	reward	報奨金
+903	entitle	権利を与える
+904	fasten	締める
+905	external	外部の
+906	auditor	会計検査官
+907	excessive	過度の
+908	extract	抽出する
+909	nutritional	栄養に関する
+910	duplicate	複製する
+911	attribute	〜の結果であると考える
+912	diligent	勤勉な
+913	discretion	判断力
+914	intensive	集中的な
+915	ongoing	現在行われている
+916	resume	再開する
+917	trustee	理事
+918	compromise	妥協する
+919	accumulate	累積する
+920	adjacent	隣接した
+921	assume	思う
+922	boost	高める
+923	confidential	秘密の
+924	constraint	制約
+925	distinguish	際立たせる
+926	dominate	支配する
+927	impose	課す
+928	persist	根強く続ける
+929	pivotal	重要な
+930	prominent	有名な
+931	remote	わずかな
+932	restricted	制限された
+933	terminate	打ち切る
+934	verify	確かめる
+935	adopt	導入する
+936	allocate	割り当てる
+937	attain	達成する
+938	collapse	崩壊する
+939	commemorate	祝う
+940	consent	承認
+941	contradict	矛盾する
+942	deficit	赤字
+943	derive	得る
+944	detect	感知する
+945	dimension	寸法
+946	discipline	自制
+947	dispute	論争
+948	distinct	はっきり区別できる
+949	domain	領域
+950	eliminate	削減する
+951	eventually	ようやく
+952	fluctuate	変動する
+953	highlight	明らかにする
+954	investigate	詳しく調べる
+955	markedly	著しく
+956	mature	成熟した
+957	moderately	少し
+958	perspective	視点
+959	preserve	守る
+960	prestigious	名誉ある
+961	principal	主要な
+962	prospect	可能性
+963	reflect	映す
+964	reform	改革
+965	reinforce	強調する
+966	revolution	革命
+967	trace	跡をたどる
+968	undergo	受ける
+969	undertake	取り組む
+970	utility	公共料金
+971	venture	ベンチャー企業
+972	prolonged	長時間に渡る
+973	stimulate	活性化する
+974	accomplish	なし遂げる
+975	activate	始動させる
+976	caution	注意
+977	collide	衝突する
+978	consecutive	連続した
+979	detach	取り外す
+980	dilute	薄める
+981	disrupt	乱す
+982	emerge	明らかになる
+983	endeavor	試み
+984	foresee	予測する
+985	interrupt	邪魔をする
+986	pursue	進む
+987	resist	拒否する
+988	enthusiastic	乗り気になっている
+989	incentive	誘因
+990	strive	努力する`;
 
-    let vocabulary = [];
+    const BOOKMARK_STORAGE_KEY = "toeic_derubo_bookmarks_embedded_v1";
+    const COMPLETED_STORAGE_KEY = "toeic_derubo_completed_embedded_v1";
+
+    const vocabulary = parseVocab(RAW_VOCAB);
+
     let selectedWords = [];
     let activeDeck = [];
     let currentWord = null;
@@ -686,246 +1624,28 @@
     const feedback = document.getElementById("feedback");
     const nextBtn = document.getElementById("nextBtn");
 
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-
-    loadSavedVocabulary();
     renderHomeBookmarks();
     renderProgress();
 
-    function loadSavedVocabulary() {
-      try {
-        const saved = localStorage.getItem(VOCAB_STORAGE_KEY);
-        if (!saved) return;
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          vocabulary = uniqueWords(parsed);
-          updateLoadedCount();
-        }
-      } catch {
-        vocabulary = [];
-      }
-    }
-
-    function saveVocabulary() {
-      localStorage.setItem(VOCAB_STORAGE_KEY, JSON.stringify(uniqueWords(vocabulary)));
-      updateLoadedCount();
-      renderProgress();
-    }
-
-    function updateLoadedCount() {
-      document.getElementById("loadedCount").textContent = vocabulary.length;
-    }
-
-    async function loadPdfVocabulary() {
-      const fileInput = document.getElementById("pdfInput");
-      const status = document.getElementById("loaderStatus");
-      const file = fileInput.files[0];
-
-      if (!file) {
-        alert("Please choose 出るボ一覧.pdf first.");
-        return;
-      }
-
-      status.innerHTML = "Reading PDF...";
-
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        const allItems = [];
-
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-          status.innerHTML = `OCR in progress... Page ${pageNum} / ${pdf.numPages}. This may take a while.`;
-
-          const page = await pdf.getPage(pageNum);
-          const viewport = page.getViewport({ scale: 2.4 });
-
-          const canvas = document.createElement("canvas");
-          const context = canvas.getContext("2d");
-
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-
-          await page.render({
-            canvasContext: context,
-            viewport: viewport
-          }).promise;
-
-          const imageDataUrl = canvas.toDataURL("image/png");
-
-          const ocrResult = await Tesseract.recognize(
-            imageDataUrl,
-            "eng+jpn",
-            {
-              logger: progress => {
-                if (progress.status === "recognizing text") {
-                  const pct = Math.round(progress.progress * 100);
-                  status.innerHTML = `OCR page ${pageNum} / ${pdf.numPages}: ${pct}%`;
-                }
-              }
-            }
-          );
-
-          const pageText = ocrResult.data.text;
-          const pageItems = parseOcrText(pageText);
-          allItems.push(...pageItems);
-        }
-
-        vocabulary = mergeVocabulary(vocabulary, allItems);
-        saveVocabulary();
-
-        status.innerHTML = `Loaded vocabulary: ${vocabulary.length} words.`;
-        alert(`Loaded ${vocabulary.length} words from the PDF. Check the count. If OCR missed many words, use the pasted TSV fallback.`);
-      } catch (error) {
-        console.error(error);
-        alert("PDF OCR failed. Please try the pasted TSV fallback.");
-        status.innerHTML = "PDF OCR failed.";
-      }
-    }
-
-    function parseOcrText(text) {
-      const lines = text
-        .split(/\r?\n/)
-        .map(line => line.trim())
-        .filter(Boolean);
-
-      const items = [];
-
-      for (const line of lines) {
-        const cleaned = line
-          .replace(/[|｜]/g, " ")
-          .replace(/[□■口ロ]{2,}/g, " ")
-          .replace(/\s+/g, " ")
-          .trim();
-
-        const match = cleaned.match(/(\d{1,3})\s+([A-Za-z][A-Za-z\s.'’\-]+?)\s+(.+)/);
-
-        if (!match) continue;
-
-        const number = Number(match[1]);
-        if (!number || number < 1 || number > 990) continue;
-
-        let en = match[2].trim();
-        let ja = match[3].trim();
-
-        en = cleanEnglishWord(en);
-        ja = cleanJapaneseMeaning(ja);
-
-        if (!en || !ja) continue;
-        if (en.length > 40) continue;
-        if (!/[A-Za-z]/.test(en)) continue;
-
-        items.push(makeWordObject(number, en, ja));
-      }
-
-      return uniqueWords(items);
-    }
-
-    function cleanEnglishWord(text) {
-      return String(text)
-        .replace(/[0-9]/g, "")
-        .replace(/[()[\]{}]/g, "")
-        .replace(/[~〜]/g, "")
-        .replace(/\s+/g, " ")
+    function parseVocab(raw) {
+      return raw
         .trim()
-        .replace(/^l(?=[a-z])/, "")
-        .replace(/^I(?=[a-z])/, "");
-    }
+        .split(/\n/)
+        .map(line => {
+          const parts = line.split("\t");
+          const number = Number(parts[0]);
+          const en = parts[1].trim();
+          const ja = parts.slice(2).join("\t").trim();
 
-    function cleanJapaneseMeaning(text) {
-      return String(text)
-        .replace(/[|｜]/g, "")
-        .replace(/[()（）]/g, "")
-        .replace(/名|動|形|副|前|接/g, "")
-        .replace(/\s+/g, "")
-        .replace(/^[:：,，.。]+/, "")
-        .trim();
-    }
-
-    function loadPastedVocabulary() {
-      const text = document.getElementById("manualTsv").value.trim();
-
-      if (!text) {
-        alert("Paste TSV first.");
-        return;
-      }
-
-      const items = parseTsv(text);
-
-      if (items.length === 0) {
-        alert("No valid vocabulary found. TSV format: number, English, Japanese.");
-        return;
-      }
-
-      vocabulary = mergeVocabulary(vocabulary, items);
-      saveVocabulary();
-
-      alert(`Loaded ${items.length} words. Total vocabulary: ${vocabulary.length}.`);
-      renderHomeBookmarks();
-      renderProgress();
-    }
-
-    function parseTsv(text) {
-      const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
-      const items = [];
-
-      for (const line of lines) {
-        const parts = line.split(/\t|,/).map(p => p.trim()).filter(Boolean);
-
-        if (parts.length < 3) continue;
-
-        const number = Number(parts[0]);
-        const en = cleanEnglishWord(parts[1]);
-        const ja = cleanJapaneseMeaning(parts.slice(2).join(" "));
-
-        if (!number || !en || !ja) continue;
-
-        items.push(makeWordObject(number, en, ja));
-      }
-
-      return uniqueWords(items);
-    }
-
-    function makeWordObject(number, en, ja) {
-      return {
-        number,
-        level: number <= 500 ? "BASIC" : "ADVANCED",
-        en,
-        ja,
-        synonyms: [],
-        example_en: createSafeExample(en),
-        example_ja: "",
-        source: "Derubo"
-      };
-    }
-
-    function createSafeExample(en) {
-      return `Please review the TOEIC word "${en}" carefully.`;
-    }
-
-    function mergeVocabulary(oldList, newList) {
-      const map = new Map();
-
-      [...oldList, ...newList].forEach(item => {
-        const key = wordKey(item.en);
-        if (!key) return;
-
-        const existing = map.get(key);
-
-        if (!existing) {
-          map.set(key, item);
-        } else {
-          map.set(key, {
-            ...existing,
-            ...item,
-            number: existing.number || item.number,
-            ja: existing.ja || item.ja,
-            level: existing.level || item.level
-          });
-        }
-      });
-
-      return Array.from(map.values()).sort((a, b) => (a.number || 9999) - (b.number || 9999));
+          return {
+            number,
+            en,
+            ja,
+            level: number <= 500 ? "BASIC" : "ADVANCED",
+            synonyms: []
+          };
+        })
+        .filter(item => item.number && item.en && item.ja);
     }
 
     function startGame() {
@@ -934,12 +1654,12 @@
       selectedWords = filterWordsForGame();
 
       if (selectedWords.length < 4 && modeSelect.value === "choice") {
-        alert("Not enough words for multiple choice. Load more vocabulary, include completed words, choose Mixed, or use Type In mode.");
+        alert("Not enough words for multiple choice. Choose Mixed, include completed words, or use Type In mode.");
         return;
       }
 
       if (selectedWords.length < 1) {
-        alert("No available words. Load the PDF, include completed words, or reset completed history.");
+        alert("No available words. Include completed words or reset completed history.");
         return;
       }
 
@@ -1030,7 +1750,7 @@
 
       document.getElementById("finalScore").textContent = score;
       document.getElementById("finalMessage").textContent =
-        "You completed all available unused words in this selection. Load more words, include completed words, or reset completed-word history.";
+        "You completed all available unused words in this selection. Include completed words or reset completed-word history to keep practicing.";
 
       renderReview();
       document.getElementById("retryWrongBtn").classList.toggle("hidden", wrongAnswers.length === 0);
@@ -1038,16 +1758,11 @@
 
     function renderQuestion() {
       levelTag.textContent = currentWord.level === "BASIC" ? "Basic" : "Advanced";
-      numberTag.textContent = `No. ${currentWord.number || "?"}`;
+      numberTag.textContent = `No. ${currentWord.number}`;
       updateBookmarkUI();
 
       const direction = directionSelect.value;
       const mode = modeSelect.value;
-
-      if (mode === "blank") {
-        renderBlankQuestion();
-        return;
-      }
 
       if (direction === "EN_TO_JA") {
         questionLabel.textContent = "What does this TOEIC word mean in Japanese?";
@@ -1056,7 +1771,7 @@
       } else {
         questionLabel.textContent = "What is the English word for this Japanese meaning?";
         questionMain.textContent = currentWord.ja;
-        sentenceBox.innerHTML = `<strong>Hint:</strong> Type the English word from the TOEIC list.`;
+        sentenceBox.innerHTML = `<strong>Hint:</strong> Type the English word from the 出るボ list.`;
       }
 
       if (mode === "choice") {
@@ -1068,21 +1783,6 @@
         typeArea.classList.remove("hidden");
         setTimeout(() => typeInput.focus(), 100);
       }
-    }
-
-    function renderBlankQuestion() {
-      updateBookmarkUI();
-
-      questionLabel.textContent = "Fill in the blank with the correct TOEIC word.";
-      questionMain.textContent = `Please review the TOEIC word "______" carefully.`;
-
-      sentenceBox.innerHTML = `
-        <strong>Japanese hint:</strong> ${escapeHtml(currentWord.ja)}
-      `;
-
-      choiceArea.classList.add("hidden");
-      typeArea.classList.remove("hidden");
-      setTimeout(() => typeInput.focus(), 100);
     }
 
     function renderChoices() {
@@ -1147,20 +1847,17 @@
 
     function judgeTypedAnswer(answer) {
       const direction = directionSelect.value;
-      const mode = modeSelect.value;
 
-      if (mode === "blank" || direction === "JA_TO_EN") {
+      if (direction === "JA_TO_EN") {
         const user = normalizeEnglish(answer);
-        const acceptable = [currentWord.en, ...currentWord.synonyms].map(normalizeEnglish);
+        const correct = normalizeEnglish(currentWord.en);
 
-        for (const ans of acceptable) {
-          if (user === ans) {
-            return { correct: true, message: "Correct." };
-          }
+        if (user === correct) {
+          return { correct: true, message: "Correct." };
+        }
 
-          if (nearlyEqual(user, ans)) {
-            return { correct: true, message: "Accepted. Small spelling difference." };
-          }
+        if (nearlyEqual(user, correct)) {
+          return { correct: true, message: "Accepted. Small spelling difference." };
         }
 
         return { correct: false, message: "The English word is different." };
@@ -1168,12 +1865,10 @@
 
       if (direction === "EN_TO_JA") {
         const userJa = normalizeJapanese(answer);
-        const acceptableJa = [currentWord.ja].map(normalizeJapanese);
+        const correctJa = normalizeJapanese(currentWord.ja);
 
-        for (const ans of acceptableJa) {
-          if (userJa === ans || userJa.includes(ans) || ans.includes(userJa)) {
-            return { correct: true, message: "Accepted. Your Japanese meaning is close enough." };
-          }
+        if (userJa === correctJa || userJa.includes(correctJa) || correctJa.includes(userJa)) {
+          return { correct: true, message: "Accepted. Your Japanese meaning is close enough." };
         }
 
         return { correct: false, message: "The Japanese meaning is different." };
@@ -1193,7 +1888,7 @@
       feedback.className = "feedback good";
       feedback.innerHTML = `
         ${message}<br><br>
-        <span class="pill">No. ${escapeHtml(currentWord.number || "?")}</span>
+        <span class="pill">No. ${escapeHtml(currentWord.number)}</span>
         <span class="pill">${escapeHtml(currentWord.level)}</span><br>
         <strong>${escapeHtml(currentWord.en)}</strong> = ${escapeHtml(currentWord.ja)}<br><br>
         <em>This word is now saved as completed. You can still bookmark it for review.</em>
@@ -1216,7 +1911,7 @@
       feedback.innerHTML = `
         ${reason}<br>
         Your answer: <strong>${escapeHtml(userAnswer || "")}</strong><br><br>
-        <span class="pill">No. ${escapeHtml(currentWord.number || "?")}</span>
+        <span class="pill">No. ${escapeHtml(currentWord.number)}</span>
         <span class="pill">${escapeHtml(currentWord.level)}</span><br>
         Correct answer: <strong>${escapeHtml(currentWord.en)}</strong> = ${escapeHtml(currentWord.ja)}<br><br>
         <em>This word was not saved as completed because you missed it.</em>
@@ -1276,7 +1971,7 @@
         div.innerHTML = `
           <div>
             <span class="pill">TOEIC</span>
-            <span class="pill">No. ${escapeHtml(w.number || "?")}</span>
+            <span class="pill">No. ${escapeHtml(w.number)}</span>
             <span class="pill">${escapeHtml(w.level)}</span>
             ${isBookmarked(w.en) ? '<span class="pill">Bookmarked</span>' : ''}
           </div>
@@ -1455,7 +2150,7 @@
             <div>
               <div>
                 <span class="pill">TOEIC</span>
-                <span class="pill">No. ${escapeHtml(word.number || "?")}</span>
+                <span class="pill">No. ${escapeHtml(word.number)}</span>
                 <span class="pill">${escapeHtml(word.level)}</span>
                 ${isCompleted(word.en) ? '<span class="pill">Completed</span>' : ''}
               </div>
@@ -1515,9 +2210,9 @@
       if (!box) return;
 
       const completed = getCompletedRaw();
-      const total = uniqueWords(vocabulary).length;
+      const total = vocabulary.length;
 
-      const completedExisting = uniqueWords(vocabulary)
+      const completedExisting = vocabulary
         .filter(w => completed.includes(wordKey(w.en))).length;
 
       const basicTotal = vocabulary.filter(w => w.level === "BASIC").length;
@@ -1530,7 +2225,7 @@
         .filter(w => w.level === "ADVANCED" && completed.includes(wordKey(w.en))).length;
 
       box.innerHTML = `
-        <strong>Loaded vocabulary:</strong> ${total}<br>
+        <strong>Built-in vocabulary:</strong> ${total}<br>
         <strong>Total completed:</strong> ${completedExisting} / ${total}<br>
         <strong>Basic:</strong> ${basicCompleted} / ${basicTotal}<br>
         <strong>Advanced:</strong> ${advancedCompleted} / ${advancedTotal}<br>
