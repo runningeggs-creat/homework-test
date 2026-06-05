@@ -71,7 +71,7 @@
       color: #e2e8f0;
     }
 
-    select, input, button {
+    select, input, button, textarea {
       width: 100%;
       padding: 12px 14px;
       border-radius: 13px;
@@ -79,10 +79,15 @@
       font-size: 16px;
     }
 
-    select, input {
+    select, input, textarea {
       background: #f8fafc;
       color: #0f172a;
       outline: none;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 76px;
     }
 
     button {
@@ -160,6 +165,12 @@
       border: 1px solid rgba(148, 163, 184, 0.18);
       padding: 18px;
       border-radius: 18px;
+    }
+
+    .progress-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
     }
 
     .progress-box {
@@ -240,7 +251,7 @@
       font-size: 42px;
       line-height: 1.15;
       font-weight: 950;
-      margin: 8px 0 12px;
+      margin: 8px 0 20px;
       word-break: break-word;
     }
 
@@ -277,21 +288,6 @@
       color: #4c0519;
     }
 
-    .answer-area {
-      display: flex;
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .answer-area input {
-      flex: 1;
-      border: 2px solid #cbd5e1;
-    }
-
-    .answer-area button {
-      width: 170px;
-    }
-
     .feedback {
       margin-top: 18px;
       padding: 15px;
@@ -313,12 +309,6 @@
       color: #881337;
     }
 
-    .feedback.info {
-      display: block;
-      background: #dbeafe;
-      color: #1e3a8a;
-    }
-
     .actions {
       display: flex;
       gap: 10px;
@@ -335,13 +325,13 @@
       display: none !important;
     }
 
-    .review-list, .bookmark-list {
+    .review-list, .bookmark-list, .custom-list {
       display: grid;
       gap: 12px;
       margin-top: 18px;
     }
 
-    .review-item, .bookmark-item {
+    .review-item, .bookmark-item, .custom-item {
       background: #f1f5f9;
       color: #0f172a;
       border-radius: 16px;
@@ -350,11 +340,11 @@
       line-height: 1.55;
     }
 
-    .bookmark-item {
+    .bookmark-item, .custom-item {
       background: rgba(248, 250, 252, 0.98);
     }
 
-    .bookmark-item-top {
+    .bookmark-item-top, .custom-item-top {
       display: flex;
       justify-content: space-between;
       gap: 12px;
@@ -362,7 +352,7 @@
       flex-wrap: wrap;
     }
 
-    .bookmark-word {
+    .bookmark-word, .custom-word {
       font-size: 22px;
       font-weight: 950;
     }
@@ -404,7 +394,8 @@
         padding: 20px;
       }
 
-      .settings {
+      .settings,
+      .progress-grid {
         grid-template-columns: 1fr;
       }
 
@@ -416,15 +407,7 @@
         font-size: 32px;
       }
 
-      .answer-area {
-        flex-direction: column;
-      }
-
-      .answer-area button {
-        width: 100%;
-      }
-
-      .bookmark-item-top {
+      .bookmark-item-top, .custom-item-top {
         flex-direction: column;
       }
     }
@@ -437,8 +420,8 @@
       <h1>TOEIC Derubo Vocabulary Quiz</h1>
 
       <div class="subtitle">
-        TOEIC-only endless vocabulary practice using the built-in 出るボ list.
-        The game continues until you press End Game, lose all 3 lives, or finish all available non-repeated words.
+        TOEIC-only vocabulary practice using the built-in 出るボ list.
+        Choose level, direction, lives, and whether completed words should be skipped.
       </div>
 
       <div class="settings">
@@ -448,15 +431,8 @@
             <option value="MIXED">Mixed: Basic + Advanced</option>
             <option value="BASIC">Basic: No. 1–500</option>
             <option value="ADVANCED">Advanced: No. 501–990</option>
+            <option value="CUSTOM">Custom Added Words Only</option>
             <option value="BOOKMARKS">Bookmarked Words Only</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="modeSelect">Question Style</label>
-          <select id="modeSelect">
-            <option value="choice">Multiple Choice</option>
-            <option value="type">Type In</option>
           </select>
         </div>
 
@@ -469,6 +445,15 @@
         </div>
 
         <div class="field">
+          <label for="livesSelect">Lives</label>
+          <select id="livesSelect">
+            <option value="3">3 Lives</option>
+            <option value="10">10 Lives</option>
+            <option value="unlimited">No Limit</option>
+          </select>
+        </div>
+
+        <div class="field">
           <label for="completedSelect">Completed Words</label>
           <select id="completedSelect">
             <option value="skip">Skip completed words</option>
@@ -477,19 +462,23 @@
         </div>
       </div>
 
-      <button class="start-btn" onclick="startGame()">Start Endless Game</button>
+      <button class="start-btn" onclick="startGame()">Start Game</button>
 
       <div class="home-panels">
         <div class="home-panel">
           <h2>📘 Study Progress</h2>
-          <div id="progressBox" class="progress-box"></div>
+
+          <div class="progress-grid">
+            <div id="progressEnToJa" class="progress-box"></div>
+            <div id="progressJaToEn" class="progress-box"></div>
+          </div>
 
           <div class="actions">
             <button class="danger" onclick="clearCompletedWords()">Reset Completed Words</button>
           </div>
 
           <div class="note">
-            Correctly answered words are saved as completed. When “Skip completed words” is selected, those words will not appear again in later plays.
+            Progress is separated by direction. English → Japanese and Japanese → English are treated as different skills.
           </div>
         </div>
 
@@ -507,11 +496,49 @@
 
           <div id="homeBookmarkList" class="bookmark-list"></div>
         </div>
-      </div>
 
-      <div class="note">
-        Before answering, the game does not show Japanese translations or English explanations.
-        Full information appears only after you answer.
+        <div class="home-panel">
+          <h2>➕ Add Your Own Vocabulary</h2>
+
+          <div class="settings">
+            <div class="field">
+              <label for="customEn">English Word</label>
+              <input id="customEn" placeholder="e.g. negotiate" />
+            </div>
+
+            <div class="field">
+              <label for="customJa">Japanese Meaning</label>
+              <input id="customJa" placeholder="e.g. 交渉する" />
+            </div>
+
+            <div class="field">
+              <label for="customLevel">Level</label>
+              <select id="customLevel">
+                <option value="BASIC">Basic</option>
+                <option value="ADVANCED">Advanced</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="customExampleEn">English Example Sentence Optional</label>
+              <textarea id="customExampleEn" placeholder="e.g. The manager will negotiate the contract."></textarea>
+            </div>
+
+            <div class="field">
+              <label for="customExampleJa">Japanese Example Sentence Optional</label>
+              <textarea id="customExampleJa" placeholder="e.g. マネージャーは契約について交渉します。"></textarea>
+            </div>
+          </div>
+
+          <button class="success start-btn" onclick="addCustomWord()">Add Vocabulary</button>
+
+          <div class="note">
+            If you leave example sentences blank, the game automatically creates simple matching example sentences.
+          </div>
+
+          <h3 style="margin-top:20px;">Your Added Words</h3>
+          <div id="customWordList" class="custom-list"></div>
+        </div>
       </div>
     </div>
 
@@ -545,14 +572,7 @@
           <button id="bookmarkBtn" class="warning small" onclick="toggleCurrentBookmark()">☆ Bookmark This Word</button>
         </div>
 
-        <div id="sentenceBox" class="sentence-box"></div>
-
         <div id="choiceArea" class="choices"></div>
-
-        <div id="typeArea" class="answer-area hidden">
-          <input id="typeInput" type="text" placeholder="Type your answer..." autocomplete="off" />
-          <button onclick="checkTypedAnswer()">Submit</button>
-        </div>
 
         <div id="feedback" class="feedback"></div>
 
@@ -1575,10 +1595,13 @@
 989	incentive	誘因
 990	strive	努力する`;
 
-    const BOOKMARK_STORAGE_KEY = "toeic_derubo_bookmarks_embedded_v1";
-    const COMPLETED_STORAGE_KEY = "toeic_derubo_completed_embedded_v1";
+    const BOOKMARK_STORAGE_KEY = "toeic_derubo_bookmarks_v2";
+    const COMPLETED_STORAGE_KEY = "toeic_derubo_completed_by_direction_v1";
+    const CUSTOM_STORAGE_KEY = "toeic_derubo_custom_words_v1";
 
-    const vocabulary = parseVocab(RAW_VOCAB);
+    let builtInVocabulary = parseVocab(RAW_VOCAB);
+    let customVocabulary = getCustomWordsRaw();
+    let vocabulary = combineVocabulary();
 
     let selectedWords = [];
     let activeDeck = [];
@@ -1588,6 +1611,8 @@
     let correct = 0;
     let mistakes = 0;
     let lives = 3;
+    let maxLives = 3;
+    let unlimitedLives = false;
     let questionNumber = 0;
     let answered = false;
     let wrongAnswers = [];
@@ -1599,8 +1624,8 @@
     const result = document.getElementById("result");
 
     const levelSelect = document.getElementById("levelSelect");
-    const modeSelect = document.getElementById("modeSelect");
     const directionSelect = document.getElementById("directionSelect");
+    const livesSelect = document.getElementById("livesSelect");
     const completedSelect = document.getElementById("completedSelect");
 
     const scoreEl = document.getElementById("score");
@@ -1617,14 +1642,12 @@
 
     const questionLabel = document.getElementById("questionLabel");
     const questionMain = document.getElementById("questionMain");
-    const sentenceBox = document.getElementById("sentenceBox");
     const choiceArea = document.getElementById("choiceArea");
-    const typeArea = document.getElementById("typeArea");
-    const typeInput = document.getElementById("typeInput");
     const feedback = document.getElementById("feedback");
     const nextBtn = document.getElementById("nextBtn");
 
     renderHomeBookmarks();
+    renderCustomWords();
     renderProgress();
 
     function parseVocab(raw) {
@@ -1637,29 +1660,50 @@
           const en = parts[1].trim();
           const ja = parts.slice(2).join("\t").trim();
 
-          return {
+          return makeWordObject({
             number,
             en,
             ja,
             level: number <= 500 ? "BASIC" : "ADVANCED",
-            synonyms: []
-          };
+            source: "BUILT_IN"
+          });
         })
         .filter(item => item.number && item.en && item.ja);
+    }
+
+    function makeWordObject({ number, en, ja, level, source, exampleEn, exampleJa }) {
+      const safeExampleEn = exampleEn && exampleEn.trim()
+        ? exampleEn.trim()
+        : `Please review the TOEIC word "${en}" carefully.`;
+
+      const safeExampleJa = exampleJa && exampleJa.trim()
+        ? exampleJa.trim()
+        : `TOEIC単語「${en}」を注意深く復習してください。`;
+
+      return {
+        number,
+        en,
+        ja,
+        level,
+        source,
+        synonyms: [],
+        exampleEn: safeExampleEn,
+        exampleJa: safeExampleJa
+      };
+    }
+
+    function combineVocabulary() {
+      return uniqueWords([...builtInVocabulary, ...customVocabulary]);
     }
 
     function startGame() {
       retryMode = false;
       lastGameWasBookmarks = levelSelect.value === "BOOKMARKS";
+      setLives();
       selectedWords = filterWordsForGame();
 
-      if (selectedWords.length < 4 && modeSelect.value === "choice") {
-        alert("Not enough words for multiple choice. Choose Mixed, include completed words, or use Type In mode.");
-        return;
-      }
-
-      if (selectedWords.length < 1) {
-        alert("No available words. Include completed words or reset completed history.");
+      if (selectedWords.length < 4) {
+        alert("Not enough words for multiple choice. Choose Mixed, include completed words, or add more custom words.");
         return;
       }
 
@@ -1674,11 +1718,24 @@
       nextQuestion();
     }
 
+    function setLives() {
+      const choice = livesSelect.value;
+      unlimitedLives = choice === "unlimited";
+
+      if (unlimitedLives) {
+        maxLives = Infinity;
+        lives = Infinity;
+      } else {
+        maxLives = Number(choice);
+        lives = maxLives;
+      }
+    }
+
     function startBookmarkedGame() {
       const bookmarks = getBookmarkedWords();
 
-      if (bookmarks.length < 1) {
-        alert("No bookmarked words yet.");
+      if (bookmarks.length < 4) {
+        alert("You need at least 4 bookmarked words for multiple choice.");
         return;
       }
 
@@ -1692,6 +1749,8 @@
 
       if (level === "BOOKMARKS") {
         pool = getBookmarkedWords();
+      } else if (level === "CUSTOM") {
+        pool = [...customVocabulary];
       } else if (level === "MIXED") {
         pool = [...vocabulary];
       } else {
@@ -1701,7 +1760,7 @@
       pool = uniqueWords(pool);
 
       if (completedSelect.value === "skip" && level !== "BOOKMARKS") {
-        const completed = getCompletedRaw();
+        const completed = getCompletedForDirection(directionSelect.value);
         pool = pool.filter(w => !completed.includes(wordKey(w.en)));
       }
 
@@ -1712,14 +1771,13 @@
       score = 0;
       correct = 0;
       mistakes = 0;
-      lives = 3;
       questionNumber = 0;
       wrongAnswers = [];
       answered = false;
     }
 
     function nextQuestion() {
-      if (lives <= 0) {
+      if (!unlimitedLives && lives <= 0) {
         endGame();
         return;
       }
@@ -1734,7 +1792,6 @@
       feedback.innerHTML = "";
       nextBtn.classList.add("hidden");
       choiceArea.innerHTML = "";
-      typeInput.value = "";
 
       currentWord = activeDeck.shift();
       questionNumber++;
@@ -1750,7 +1807,7 @@
 
       document.getElementById("finalScore").textContent = score;
       document.getElementById("finalMessage").textContent =
-        "You completed all available unused words in this selection. Include completed words or reset completed-word history to keep practicing.";
+        "You completed all available unused words in this selection. Include completed words, reset completed-word history, or add custom vocabulary.";
 
       renderReview();
       document.getElementById("retryWrongBtn").classList.toggle("hidden", wrongAnswers.length === 0);
@@ -1758,31 +1815,20 @@
 
     function renderQuestion() {
       levelTag.textContent = currentWord.level === "BASIC" ? "Basic" : "Advanced";
-      numberTag.textContent = `No. ${currentWord.number}`;
+      numberTag.textContent = currentWord.source === "CUSTOM" ? "Custom" : `No. ${currentWord.number}`;
       updateBookmarkUI();
 
       const direction = directionSelect.value;
-      const mode = modeSelect.value;
 
       if (direction === "EN_TO_JA") {
         questionLabel.textContent = "What does this TOEIC word mean in Japanese?";
         questionMain.textContent = currentWord.en;
-        sentenceBox.innerHTML = `<strong>Hint:</strong> No Japanese meaning is shown before answering.`;
       } else {
         questionLabel.textContent = "What is the English word for this Japanese meaning?";
         questionMain.textContent = currentWord.ja;
-        sentenceBox.innerHTML = `<strong>Hint:</strong> Type the English word from the 出るボ list.`;
       }
 
-      if (mode === "choice") {
-        typeArea.classList.add("hidden");
-        choiceArea.classList.remove("hidden");
-        renderChoices();
-      } else {
-        choiceArea.classList.add("hidden");
-        typeArea.classList.remove("hidden");
-        setTimeout(() => typeInput.focus(), 100);
-      }
+      renderChoices();
     }
 
     function renderChoices() {
@@ -1826,61 +1872,12 @@
       nextBtn.classList.remove("hidden");
     }
 
-    function checkTypedAnswer() {
-      if (answered) return;
-
-      const userAnswer = typeInput.value.trim();
-      if (!userAnswer) return;
-
-      answered = true;
-
-      const judgment = judgeTypedAnswer(userAnswer);
-
-      if (judgment.correct) {
-        handleCorrect(judgment.message);
-      } else {
-        handleWrong(userAnswer, judgment.message);
-      }
-
-      nextBtn.classList.remove("hidden");
-    }
-
-    function judgeTypedAnswer(answer) {
-      const direction = directionSelect.value;
-
-      if (direction === "JA_TO_EN") {
-        const user = normalizeEnglish(answer);
-        const correct = normalizeEnglish(currentWord.en);
-
-        if (user === correct) {
-          return { correct: true, message: "Correct." };
-        }
-
-        if (nearlyEqual(user, correct)) {
-          return { correct: true, message: "Accepted. Small spelling difference." };
-        }
-
-        return { correct: false, message: "The English word is different." };
-      }
-
-      if (direction === "EN_TO_JA") {
-        const userJa = normalizeJapanese(answer);
-        const correctJa = normalizeJapanese(currentWord.ja);
-
-        if (userJa === correctJa || userJa.includes(correctJa) || correctJa.includes(userJa)) {
-          return { correct: true, message: "Accepted. Your Japanese meaning is close enough." };
-        }
-
-        return { correct: false, message: "The Japanese meaning is different." };
-      }
-    }
-
     function handleCorrect(message) {
       score++;
       correct++;
 
       if (!retryMode && levelSelect.value !== "BOOKMARKS") {
-        addCompletedWord(currentWord.en);
+        addCompletedWord(currentWord.en, directionSelect.value);
       }
 
       updateStats();
@@ -1888,16 +1885,21 @@
       feedback.className = "feedback good";
       feedback.innerHTML = `
         ${message}<br><br>
-        <span class="pill">No. ${escapeHtml(currentWord.number)}</span>
+        <span class="pill">${currentWord.source === "CUSTOM" ? "Custom" : "No. " + escapeHtml(currentWord.number)}</span>
         <span class="pill">${escapeHtml(currentWord.level)}</span><br>
         <strong>${escapeHtml(currentWord.en)}</strong> = ${escapeHtml(currentWord.ja)}<br><br>
-        <em>This word is now saved as completed. You can still bookmark it for review.</em>
+        <strong>Example:</strong> ${escapeHtml(currentWord.exampleEn)}<br>
+        <strong>Japanese:</strong> ${escapeHtml(currentWord.exampleJa)}<br><br>
+        <em>This word is now saved as completed for this direction. You can still bookmark it for review.</em>
       `;
     }
 
     function handleWrong(userAnswer, reason) {
       mistakes++;
-      lives--;
+
+      if (!unlimitedLives) {
+        lives--;
+      }
 
       wrongAnswers.push({
         word: currentWord,
@@ -1911,9 +1913,11 @@
       feedback.innerHTML = `
         ${reason}<br>
         Your answer: <strong>${escapeHtml(userAnswer || "")}</strong><br><br>
-        <span class="pill">No. ${escapeHtml(currentWord.number)}</span>
+        <span class="pill">${currentWord.source === "CUSTOM" ? "Custom" : "No. " + escapeHtml(currentWord.number)}</span>
         <span class="pill">${escapeHtml(currentWord.level)}</span><br>
         Correct answer: <strong>${escapeHtml(currentWord.en)}</strong> = ${escapeHtml(currentWord.ja)}<br><br>
+        <strong>Example:</strong> ${escapeHtml(currentWord.exampleEn)}<br>
+        <strong>Japanese:</strong> ${escapeHtml(currentWord.exampleJa)}<br><br>
         <em>This word was not saved as completed because you missed it.</em>
       `;
     }
@@ -1922,7 +1926,13 @@
       scoreEl.textContent = score;
       correctEl.textContent = correct;
       mistakesEl.textContent = mistakes;
-      livesEl.textContent = "❤️".repeat(lives) + "🖤".repeat(3 - lives);
+
+      if (unlimitedLives) {
+        livesEl.textContent = "∞";
+      } else {
+        livesEl.textContent = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, maxLives - lives));
+      }
+
       questionCountEl.textContent = questionNumber;
       remainingCountEl.textContent = activeDeck.length;
     }
@@ -1935,7 +1945,7 @@
       document.getElementById("finalScore").textContent = score;
 
       let message = "";
-      if (lives <= 0) {
+      if (!unlimitedLives && lives <= 0) {
         message = "Game over. You lost all lives.";
       } else if (score >= 50) {
         message = "Excellent. You practiced a lot of TOEIC words.";
@@ -1971,13 +1981,15 @@
         div.innerHTML = `
           <div>
             <span class="pill">TOEIC</span>
-            <span class="pill">No. ${escapeHtml(w.number)}</span>
+            <span class="pill">${w.source === "CUSTOM" ? "Custom" : "No. " + escapeHtml(w.number)}</span>
             <span class="pill">${escapeHtml(w.level)}</span>
             ${isBookmarked(w.en) ? '<span class="pill">Bookmarked</span>' : ''}
           </div>
           <strong>${escapeHtml(w.en)}</strong> = ${escapeHtml(w.ja)}<br>
           Your answer: <strong>${escapeHtml(item.userAnswer)}</strong><br>
-          Reason: ${escapeHtml(item.reason)}
+          Reason: ${escapeHtml(item.reason)}<br>
+          Example: ${escapeHtml(w.exampleEn)}<br>
+          Japanese: ${escapeHtml(w.exampleJa)}
           <div class="actions">
             <button class="warning small" onclick="toggleBookmarkByWord('${escapeForAttribute(w.en)}')">
               ${isBookmarked(w.en) ? "★ Remove Bookmark" : "☆ Bookmark"}
@@ -1999,7 +2011,10 @@
         }
       });
 
-      if (wrongUnique.length === 0) return;
+      if (wrongUnique.length < 4) {
+        alert("You need at least 4 wrong words to retry in multiple choice mode.");
+        return;
+      }
 
       selectedWords = wrongUnique;
       activeDeck = shuffle(wrongUnique);
@@ -2026,6 +2041,7 @@
       result.classList.add("hidden");
       setup.classList.remove("hidden");
       renderHomeBookmarks();
+      renderCustomWords();
       renderProgress();
     }
 
@@ -2150,12 +2166,13 @@
             <div>
               <div>
                 <span class="pill">TOEIC</span>
-                <span class="pill">No. ${escapeHtml(word.number)}</span>
+                <span class="pill">${word.source === "CUSTOM" ? "Custom" : "No. " + escapeHtml(word.number)}</span>
                 <span class="pill">${escapeHtml(word.level)}</span>
-                ${isCompleted(word.en) ? '<span class="pill">Completed</span>' : ''}
               </div>
               <div class="bookmark-word">${escapeHtml(word.en)}</div>
               <div><strong>Japanese:</strong> ${escapeHtml(word.ja)}</div>
+              <div><strong>Example:</strong> ${escapeHtml(word.exampleEn)}</div>
+              <div><strong>Japanese:</strong> ${escapeHtml(word.exampleJa)}</div>
             </div>
             <button class="danger small" onclick="toggleBookmarkByWord('${escapeForAttribute(word.en)}')">
               Remove
@@ -2169,47 +2186,55 @@
     function getCompletedRaw() {
       try {
         const saved = localStorage.getItem(COMPLETED_STORAGE_KEY);
-        if (!saved) return [];
+        if (!saved) return { EN_TO_JA: [], JA_TO_EN: [] };
         const parsed = JSON.parse(saved);
-        return Array.isArray(parsed) ? parsed : [];
+
+        return {
+          EN_TO_JA: Array.isArray(parsed.EN_TO_JA) ? parsed.EN_TO_JA : [],
+          JA_TO_EN: Array.isArray(parsed.JA_TO_EN) ? parsed.JA_TO_EN : []
+        };
       } catch {
-        return [];
+        return { EN_TO_JA: [], JA_TO_EN: [] };
       }
     }
 
-    function saveCompletedRaw(keys) {
-      const unique = [...new Set(keys.map(wordKey))];
-      localStorage.setItem(COMPLETED_STORAGE_KEY, JSON.stringify(unique));
+    function saveCompletedRaw(data) {
+      localStorage.setItem(COMPLETED_STORAGE_KEY, JSON.stringify({
+        EN_TO_JA: [...new Set((data.EN_TO_JA || []).map(wordKey))],
+        JA_TO_EN: [...new Set((data.JA_TO_EN || []).map(wordKey))]
+      }));
     }
 
-    function addCompletedWord(enWord) {
-      const completed = getCompletedRaw();
+    function getCompletedForDirection(direction) {
+      const data = getCompletedRaw();
+      return data[direction] || [];
+    }
+
+    function addCompletedWord(enWord, direction) {
+      const data = getCompletedRaw();
       const key = wordKey(enWord);
 
-      if (!completed.includes(key)) {
-        completed.push(key);
-        saveCompletedRaw(completed);
+      if (!data[direction].includes(key)) {
+        data[direction].push(key);
+        saveCompletedRaw(data);
       }
-    }
-
-    function isCompleted(enWord) {
-      return getCompletedRaw().includes(wordKey(enWord));
     }
 
     function clearCompletedWords() {
-      const ok = confirm("Reset completed-word history? Previously correct words may appear again.");
+      const ok = confirm("Reset completed-word history for both directions?");
       if (!ok) return;
 
       localStorage.removeItem(COMPLETED_STORAGE_KEY);
       renderProgress();
-      renderHomeBookmarks();
     }
 
     function renderProgress() {
-      const box = document.getElementById("progressBox");
-      if (!box) return;
+      renderDirectionProgress("EN_TO_JA", document.getElementById("progressEnToJa"), "English → Japanese");
+      renderDirectionProgress("JA_TO_EN", document.getElementById("progressJaToEn"), "Japanese → English");
+    }
 
-      const completed = getCompletedRaw();
+    function renderDirectionProgress(direction, box, title) {
+      const completed = getCompletedForDirection(direction);
       const total = vocabulary.length;
 
       const completedExisting = vocabulary
@@ -2225,12 +2250,118 @@
         .filter(w => w.level === "ADVANCED" && completed.includes(wordKey(w.en))).length;
 
       box.innerHTML = `
-        <strong>Built-in vocabulary:</strong> ${total}<br>
+        <strong>${title}</strong><br>
+        <strong>Built-in + custom vocabulary:</strong> ${total}<br>
         <strong>Total completed:</strong> ${completedExisting} / ${total}<br>
         <strong>Basic:</strong> ${basicCompleted} / ${basicTotal}<br>
         <strong>Advanced:</strong> ${advancedCompleted} / ${advancedTotal}<br>
         <strong>Bookmarked:</strong> ${getBookmarkedWords().length}
       `;
+    }
+
+    function addCustomWord() {
+      const en = document.getElementById("customEn").value.trim();
+      const ja = document.getElementById("customJa").value.trim();
+      const level = document.getElementById("customLevel").value;
+      const exampleEn = document.getElementById("customExampleEn").value.trim();
+      const exampleJa = document.getElementById("customExampleJa").value.trim();
+
+      if (!en || !ja) {
+        alert("Please enter both English word and Japanese meaning.");
+        return;
+      }
+
+      if (vocabulary.some(w => wordKey(w.en) === wordKey(en))) {
+        alert("This word already exists.");
+        return;
+      }
+
+      const customNumber = "CUSTOM-" + Date.now();
+
+      const newWord = makeWordObject({
+        number: customNumber,
+        en,
+        ja,
+        level,
+        source: "CUSTOM",
+        exampleEn,
+        exampleJa
+      });
+
+      customVocabulary.push(newWord);
+      saveCustomWordsRaw(customVocabulary);
+      vocabulary = combineVocabulary();
+
+      document.getElementById("customEn").value = "";
+      document.getElementById("customJa").value = "";
+      document.getElementById("customExampleEn").value = "";
+      document.getElementById("customExampleJa").value = "";
+
+      renderCustomWords();
+      renderProgress();
+
+      alert("Vocabulary added.");
+    }
+
+    function getCustomWordsRaw() {
+      try {
+        const saved = localStorage.getItem(CUSTOM_STORAGE_KEY);
+        if (!saved) return [];
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveCustomWordsRaw(words) {
+      localStorage.setItem(CUSTOM_STORAGE_KEY, JSON.stringify(uniqueWords(words)));
+    }
+
+    function deleteCustomWord(enWord) {
+      const ok = confirm("Delete this custom word?");
+      if (!ok) return;
+
+      customVocabulary = customVocabulary.filter(w => wordKey(w.en) !== wordKey(enWord));
+      saveCustomWordsRaw(customVocabulary);
+      vocabulary = combineVocabulary();
+
+      renderCustomWords();
+      renderProgress();
+      renderHomeBookmarks();
+    }
+
+    function renderCustomWords() {
+      const list = document.getElementById("customWordList");
+      list.innerHTML = "";
+
+      if (customVocabulary.length === 0) {
+        list.innerHTML = `<div class="empty-message">No custom words yet.</div>`;
+        return;
+      }
+
+      customVocabulary.forEach(word => {
+        const div = document.createElement("div");
+        div.className = "custom-item";
+        div.innerHTML = `
+          <div class="custom-item-top">
+            <div>
+              <span class="pill">Custom</span>
+              <span class="pill">${escapeHtml(word.level)}</span>
+              <div class="custom-word">${escapeHtml(word.en)}</div>
+              <div><strong>Japanese:</strong> ${escapeHtml(word.ja)}</div>
+              <div><strong>Example:</strong> ${escapeHtml(word.exampleEn)}</div>
+              <div><strong>Japanese:</strong> ${escapeHtml(word.exampleJa)}</div>
+            </div>
+            <button class="danger small" onclick="deleteCustomWord('${escapeForAttribute(word.en)}')">Delete</button>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function combineVocabulary() {
+      return uniqueWords([...builtInVocabulary, ...customVocabulary]);
     }
 
     function uniqueWords(list) {
@@ -2262,54 +2393,6 @@
         .replace(/\s+/g, " ");
     }
 
-    function normalizeJapanese(text) {
-      return String(text)
-        .trim()
-        .replace(/[。、，,.!?！？\s]/g, "")
-        .replace(/する$/g, "")
-        .replace(/だ$/g, "")
-        .replace(/です$/g, "");
-    }
-
-    function nearlyEqual(a, b) {
-      if (!a || !b) return false;
-      if (a.length <= 4 || b.length <= 4) return false;
-
-      const dist = levenshtein(a, b);
-      const maxLen = Math.max(a.length, b.length);
-
-      if (maxLen >= 10) return dist <= 2;
-      return dist <= 1;
-    }
-
-    function levenshtein(a, b) {
-      const matrix = [];
-
-      for (let i = 0; i <= b.length; i++) {
-        matrix[i] = [i];
-      }
-
-      for (let j = 0; j <= a.length; j++) {
-        matrix[0][j] = j;
-      }
-
-      for (let i = 1; i <= b.length; i++) {
-        for (let j = 1; j <= a.length; j++) {
-          if (b.charAt(i - 1) === a.charAt(j - 1)) {
-            matrix[i][j] = matrix[i - 1][j - 1];
-          } else {
-            matrix[i][j] = Math.min(
-              matrix[i - 1][j - 1] + 1,
-              matrix[i][j - 1] + 1,
-              matrix[i - 1][j] + 1
-            );
-          }
-        }
-      }
-
-      return matrix[b.length][a.length];
-    }
-
     function shuffle(array) {
       const copy = [...array];
 
@@ -2336,16 +2419,6 @@
         .replace(/'/g, "\\'")
         .replace(/"/g, "&quot;");
     }
-
-    typeInput.addEventListener("keydown", function(e) {
-      if (e.key === "Enter") {
-        if (!nextBtn.classList.contains("hidden")) {
-          nextQuestion();
-        } else {
-          checkTypedAnswer();
-        }
-      }
-    });
   </script>
 </body>
 </html>
