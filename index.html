@@ -3,179 +3,86 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <title>TOEIC Derubo Vocabulary Quiz</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: Arial, Helvetica, sans-serif;
-    }
-
+    * { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
     body {
       margin: 0;
       min-height: 100vh;
-      background:
-        radial-gradient(circle at top left, rgba(56, 189, 248, 0.22), transparent 35%),
-        linear-gradient(135deg, #020617, #0f172a 45%, #172554);
+      background: radial-gradient(circle at top left, rgba(56,189,248,.22), transparent 35%),
+                  linear-gradient(135deg, #020617, #0f172a 45%, #172554);
       color: #f8fafc;
       display: flex;
       justify-content: center;
       align-items: flex-start;
       padding: 24px;
     }
-
     .app {
       width: 100%;
       max-width: 1120px;
-      background: rgba(15, 23, 42, 0.96);
-      border: 1px solid rgba(148, 163, 184, 0.24);
+      background: rgba(15,23,42,.96);
+      border: 1px solid rgba(148,163,184,.24);
       border-radius: 26px;
       padding: 28px;
-      box-shadow: 0 22px 70px rgba(0,0,0,0.42);
+      box-shadow: 0 22px 70px rgba(0,0,0,.42);
     }
-
-    h1, h2, h3 {
-      margin-top: 0;
-    }
-
-    h1 {
-      font-size: 35px;
-      margin-bottom: 8px;
-      letter-spacing: -0.8px;
-    }
-
-    .subtitle {
-      color: #cbd5e1;
-      line-height: 1.6;
-      margin-bottom: 24px;
-    }
+    h1,h2,h3 { margin-top: 0; }
+    h1 { font-size: 35px; margin-bottom: 8px; letter-spacing: -0.8px; }
+    .subtitle,.note { color: #cbd5e1; line-height: 1.6; }
+    .note { color: #94a3b8; font-size: 14px; margin-top: 14px; }
 
     .settings {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
     }
-
-    .field {
-      background: rgba(30, 41, 59, 0.82);
-      border: 1px solid rgba(148, 163, 184, 0.18);
+    .field,.home-panel {
+      background: rgba(30,41,59,.82);
+      border: 1px solid rgba(148,163,184,.18);
       padding: 16px;
       border-radius: 18px;
     }
-
     label {
       display: block;
       font-weight: 800;
       margin-bottom: 8px;
       color: #e2e8f0;
     }
-
-    select, input, button, textarea {
+    select,input,button {
       width: 100%;
       padding: 12px 14px;
       border-radius: 13px;
       border: none;
       font-size: 16px;
     }
-
-    select, input, textarea {
+    select,input {
       background: #f8fafc;
       color: #0f172a;
       outline: none;
     }
-
-    textarea {
-      resize: vertical;
-      min-height: 76px;
-    }
-
     button {
       cursor: pointer;
       background: #38bdf8;
       color: #082f49;
       font-weight: 900;
-      transition: 0.15s ease;
+      transition: .15s ease;
     }
+    button:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    button.secondary { background: #334155; color: #f8fafc; }
+    button.danger { background: #fb7185; color: #4c0519; }
+    button.success { background: #86efac; color: #052e16; }
+    button.warning { background: #fde047; color: #422006; }
+    button.bookmarked { background: #facc15; color: #422006; }
+    button.small { width: auto; padding: 9px 13px; font-size: 14px; }
+    button:disabled { opacity: .55; cursor: not-allowed; transform: none; }
 
-    button:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.05);
-    }
-
-    button.secondary {
-      background: #334155;
-      color: #f8fafc;
-    }
-
-    button.danger {
-      background: #fb7185;
-      color: #4c0519;
-    }
-
-    button.success {
-      background: #86efac;
-      color: #052e16;
-    }
-
-    button.warning {
-      background: #fde047;
-      color: #422006;
-    }
-
-    button.bookmarked {
-      background: #facc15;
-      color: #422006;
-    }
-
-    button.small {
-      width: auto;
-      padding: 9px 13px;
-      font-size: 14px;
-    }
-
-    button:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .start-btn {
-      margin-top: 20px;
-      font-size: 18px;
-      padding: 15px;
-    }
-
-    .note {
-      color: #94a3b8;
-      font-size: 14px;
-      line-height: 1.6;
-      margin-top: 14px;
-    }
-
-    .home-panels {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 18px;
-      margin-top: 18px;
-    }
-
-    .home-panel {
-      background: rgba(30, 41, 59, 0.82);
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      padding: 18px;
-      border-radius: 18px;
-    }
-
-    .progress-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-    }
-
+    .start-btn { margin-top: 20px; font-size: 18px; padding: 15px; }
+    .home-panels { display: grid; gap: 18px; margin-top: 18px; }
+    .progress-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
     .progress-box {
-      background: rgba(15, 23, 42, 0.45);
-      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(15,23,42,.45);
+      border: 1px solid rgba(148,163,184,.18);
       padding: 14px;
       border-radius: 14px;
       color: #cbd5e1;
@@ -191,36 +98,23 @@
       justify-content: space-between;
       margin-bottom: 18px;
     }
-
-    .stats {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
+    .stats { display: flex; gap: 10px; flex-wrap: wrap; }
     .stat {
-      background: rgba(30, 41, 59, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(30,41,59,.9);
+      border: 1px solid rgba(148,163,184,.18);
       padding: 10px 14px;
       border-radius: 999px;
       font-weight: 800;
     }
 
-    .quiz-card, .result-card {
+    .quiz-card,.result-card {
       background: #f8fafc;
       color: #0f172a;
       border-radius: 24px;
       padding: 28px;
-      box-shadow: inset 0 0 0 1px rgba(15,23,42,0.08);
+      box-shadow: inset 0 0 0 1px rgba(15,23,42,.08);
     }
-
-    .tag-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 18px;
-    }
-
+    .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
     .tag {
       background: #e0f2fe;
       color: #075985;
@@ -229,16 +123,8 @@
       font-size: 13px;
       font-weight: 900;
     }
-
-    .tag.level {
-      background: #ede9fe;
-      color: #5b21b6;
-    }
-
-    .tag.bookmark {
-      background: #fef3c7;
-      color: #92400e;
-    }
+    .tag.level { background: #ede9fe; color: #5b21b6; }
+    .tag.bookmark { background: #fef3c7; color: #92400e; }
 
     .question-label {
       color: #475569;
@@ -246,7 +132,6 @@
       font-weight: 900;
       margin-bottom: 8px;
     }
-
     .question-main {
       font-size: 42px;
       line-height: 1.15;
@@ -255,21 +140,11 @@
       word-break: break-word;
     }
 
-    .sentence-box {
-      background: #f1f5f9;
-      border-left: 5px solid #38bdf8;
-      padding: 14px;
-      border-radius: 14px;
-      margin: 14px 0 20px;
-      line-height: 1.55;
-    }
-
     .choices {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
     }
-
     .choice-btn {
       background: #e2e8f0;
       color: #0f172a;
@@ -277,16 +152,8 @@
       min-height: 58px;
       font-weight: 850;
     }
-
-    .choice-btn.correct {
-      background: #86efac;
-      color: #052e16;
-    }
-
-    .choice-btn.wrong {
-      background: #fda4af;
-      color: #4c0519;
-    }
+    .choice-btn.correct { background: #86efac; color: #052e16; }
+    .choice-btn.wrong { background: #fda4af; color: #4c0519; }
 
     .feedback {
       margin-top: 18px;
@@ -296,42 +163,19 @@
       display: none;
       line-height: 1.55;
     }
+    .feedback.good { display: block; background: #dcfce7; color: #14532d; }
+    .feedback.bad { display: block; background: #ffe4e6; color: #881337; }
 
-    .feedback.good {
-      display: block;
-      background: #dcfce7;
-      color: #14532d;
-    }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    .actions button { flex: 1; min-width: 160px; }
+    .hidden { display: none !important; }
 
-    .feedback.bad {
-      display: block;
-      background: #ffe4e6;
-      color: #881337;
-    }
-
-    .actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 16px;
-    }
-
-    .actions button {
-      flex: 1;
-      min-width: 160px;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .review-list, .bookmark-list, .custom-list {
+    .review-list,.bookmark-list,.custom-list {
       display: grid;
       gap: 12px;
       margin-top: 18px;
     }
-
-    .review-item, .bookmark-item, .custom-item {
+    .review-item,.bookmark-item,.custom-item {
       background: #f1f5f9;
       color: #0f172a;
       border-radius: 16px;
@@ -339,30 +183,15 @@
       border: 1px solid #cbd5e1;
       line-height: 1.55;
     }
-
-    .bookmark-item, .custom-item {
-      background: rgba(248, 250, 252, 0.98);
-    }
-
-    .bookmark-item-top, .custom-item-top {
+    .bookmark-item-top,.custom-item-top {
       display: flex;
       justify-content: space-between;
       gap: 12px;
       align-items: flex-start;
       flex-wrap: wrap;
     }
-
-    .bookmark-word, .custom-word {
-      font-size: 22px;
-      font-weight: 950;
-    }
-
-    .final-score {
-      font-size: 54px;
-      font-weight: 950;
-      margin: 8px 0;
-    }
-
+    .bookmark-word,.custom-word { font-size: 22px; font-weight: 950; }
+    .final-score { font-size: 54px; font-weight: 950; margin: 8px 0; }
     .pill {
       display: inline-block;
       padding: 4px 9px;
@@ -374,11 +203,10 @@
       margin-right: 4px;
       margin-bottom: 4px;
     }
-
     .empty-message {
       color: #cbd5e1;
-      background: rgba(15, 23, 42, 0.4);
-      border: 1px dashed rgba(148, 163, 184, 0.32);
+      background: rgba(15,23,42,.4);
+      border: 1px dashed rgba(148,163,184,.32);
       padding: 14px;
       border-radius: 14px;
       line-height: 1.6;
@@ -386,30 +214,11 @@
     }
 
     @media (max-width: 720px) {
-      body {
-        padding: 12px;
-      }
-
-      .app {
-        padding: 20px;
-      }
-
-      .settings,
-      .progress-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .choices {
-        grid-template-columns: 1fr;
-      }
-
-      .question-main {
-        font-size: 32px;
-      }
-
-      .bookmark-item-top, .custom-item-top {
-        flex-direction: column;
-      }
+      body { padding: 12px; }
+      .app { padding: 20px; }
+      .settings,.progress-grid,.choices { grid-template-columns: 1fr; }
+      .question-main { font-size: 32px; }
+      .bookmark-item-top,.custom-item-top { flex-direction: column; }
     }
   </style>
 </head>
@@ -518,23 +327,9 @@
                 <option value="ADVANCED">Advanced</option>
               </select>
             </div>
-
-            <div class="field">
-              <label for="customExampleEn">English Example Sentence Optional</label>
-              <textarea id="customExampleEn" placeholder="e.g. The manager will negotiate the contract."></textarea>
-            </div>
-
-            <div class="field">
-              <label for="customExampleJa">Japanese Example Sentence Optional</label>
-              <textarea id="customExampleJa" placeholder="e.g. マネージャーは契約について交渉します。"></textarea>
-            </div>
           </div>
 
           <button class="success start-btn" onclick="addCustomWord()">Add Vocabulary</button>
-
-          <div class="note">
-            If you leave example sentences blank, the game automatically creates simple matching example sentences.
-          </div>
 
           <h3 style="margin-top:20px;">Your Added Words</h3>
           <div id="customWordList" class="custom-list"></div>
@@ -597,7 +392,7 @@
           <button class="secondary" onclick="backToSetup()">Home</button>
         </div>
 
-        <h3 style="margin-top: 26px;">Wrong Answer Review</h3>
+        <h3 style="margin-top:26px;">Wrong Answer Review</h3>
         <div id="reviewList" class="review-list"></div>
       </div>
     </div>
@@ -1595,9 +1390,9 @@
 989	incentive	誘因
 990	strive	努力する`;
 
-    const BOOKMARK_STORAGE_KEY = "toeic_derubo_bookmarks_v2";
-    const COMPLETED_STORAGE_KEY = "toeic_derubo_completed_by_direction_v1";
-    const CUSTOM_STORAGE_KEY = "toeic_derubo_custom_words_v1";
+    const BOOKMARK_STORAGE_KEY = "toeic_derubo_bookmarks_v3";
+    const COMPLETED_STORAGE_KEY = "toeic_derubo_completed_by_direction_v2";
+    const CUSTOM_STORAGE_KEY = "toeic_derubo_custom_words_v2";
 
     let builtInVocabulary = parseVocab(RAW_VOCAB);
     let customVocabulary = getCustomWordsRaw();
@@ -1651,49 +1446,21 @@
     renderProgress();
 
     function parseVocab(raw) {
-      return raw
-        .trim()
-        .split(/\n/)
-        .map(line => {
-          const parts = line.split("\t");
-          const number = Number(parts[0]);
-          const en = parts[1].trim();
-          const ja = parts.slice(2).join("\t").trim();
+      return raw.trim().split(/\n/).map(line => {
+        const parts = line.split("\t");
+        const number = Number(parts[0]);
+        const en = parts[1].trim();
+        const ja = parts.slice(2).join("\t").trim();
 
-          return makeWordObject({
-            number,
-            en,
-            ja,
-            level: number <= 500 ? "BASIC" : "ADVANCED",
-            source: "BUILT_IN"
-          });
-        })
-        .filter(item => item.number && item.en && item.ja);
-    }
-
-    function makeWordObject({ number, en, ja, level, source, exampleEn, exampleJa }) {
-      const safeExampleEn = exampleEn && exampleEn.trim()
-        ? exampleEn.trim()
-        : `Please review the TOEIC word "${en}" carefully.`;
-
-      const safeExampleJa = exampleJa && exampleJa.trim()
-        ? exampleJa.trim()
-        : `TOEIC単語「${en}」を注意深く復習してください。`;
-
-      return {
-        number,
-        en,
-        ja,
-        level,
-        source,
-        synonyms: [],
-        exampleEn: safeExampleEn,
-        exampleJa: safeExampleJa
-      };
-    }
-
-    function combineVocabulary() {
-      return uniqueWords([...builtInVocabulary, ...customVocabulary]);
+        return {
+          id: "B-" + number,
+          number,
+          en,
+          ja,
+          level: number <= 500 ? "BASIC" : "ADVANCED",
+          source: "BUILT_IN"
+        };
+      }).filter(item => item.number && item.en && item.ja);
     }
 
     function startGame() {
@@ -1761,7 +1528,7 @@
 
       if (completedSelect.value === "skip" && level !== "BOOKMARKS") {
         const completed = getCompletedForDirection(directionSelect.value);
-        pool = pool.filter(w => !completed.includes(wordKey(w.en)));
+        pool = pool.filter(w => !completed.includes(wordId(w)));
       }
 
       return pool;
@@ -1836,7 +1603,7 @@
       const correctAnswer = direction === "EN_TO_JA" ? currentWord.ja : currentWord.en;
 
       let wrongPool = selectedWords
-        .filter(w => wordKey(w.en) !== wordKey(currentWord.en))
+        .filter(w => wordId(w) !== wordId(currentWord))
         .map(w => direction === "EN_TO_JA" ? w.ja : w.en);
 
       wrongPool = shuffle([...new Set(wrongPool)]);
@@ -1877,7 +1644,7 @@
       correct++;
 
       if (!retryMode && levelSelect.value !== "BOOKMARKS") {
-        addCompletedWord(currentWord.en, directionSelect.value);
+        addCompletedWord(currentWord, directionSelect.value);
       }
 
       updateStats();
@@ -1888,8 +1655,6 @@
         <span class="pill">${currentWord.source === "CUSTOM" ? "Custom" : "No. " + escapeHtml(currentWord.number)}</span>
         <span class="pill">${escapeHtml(currentWord.level)}</span><br>
         <strong>${escapeHtml(currentWord.en)}</strong> = ${escapeHtml(currentWord.ja)}<br><br>
-        <strong>Example:</strong> ${escapeHtml(currentWord.exampleEn)}<br>
-        <strong>Japanese:</strong> ${escapeHtml(currentWord.exampleJa)}<br><br>
         <em>This word is now saved as completed for this direction. You can still bookmark it for review.</em>
       `;
     }
@@ -1916,8 +1681,6 @@
         <span class="pill">${currentWord.source === "CUSTOM" ? "Custom" : "No. " + escapeHtml(currentWord.number)}</span>
         <span class="pill">${escapeHtml(currentWord.level)}</span><br>
         Correct answer: <strong>${escapeHtml(currentWord.en)}</strong> = ${escapeHtml(currentWord.ja)}<br><br>
-        <strong>Example:</strong> ${escapeHtml(currentWord.exampleEn)}<br>
-        <strong>Japanese:</strong> ${escapeHtml(currentWord.exampleJa)}<br><br>
         <em>This word was not saved as completed because you missed it.</em>
       `;
     }
@@ -1983,16 +1746,14 @@
             <span class="pill">TOEIC</span>
             <span class="pill">${w.source === "CUSTOM" ? "Custom" : "No. " + escapeHtml(w.number)}</span>
             <span class="pill">${escapeHtml(w.level)}</span>
-            ${isBookmarked(w.en) ? '<span class="pill">Bookmarked</span>' : ''}
+            ${isBookmarked(w) ? '<span class="pill">Bookmarked</span>' : ''}
           </div>
           <strong>${escapeHtml(w.en)}</strong> = ${escapeHtml(w.ja)}<br>
           Your answer: <strong>${escapeHtml(item.userAnswer)}</strong><br>
-          Reason: ${escapeHtml(item.reason)}<br>
-          Example: ${escapeHtml(w.exampleEn)}<br>
-          Japanese: ${escapeHtml(w.exampleJa)}
+          Reason: ${escapeHtml(item.reason)}
           <div class="actions">
-            <button class="warning small" onclick="toggleBookmarkByWord('${escapeForAttribute(w.en)}')">
-              ${isBookmarked(w.en) ? "★ Remove Bookmark" : "☆ Bookmark"}
+            <button class="warning small" onclick="toggleBookmarkById('${escapeForAttribute(wordId(w))}')">
+              ${isBookmarked(w) ? "★ Remove Bookmark" : "☆ Bookmark"}
             </button>
           </div>
         `;
@@ -2001,15 +1762,7 @@
     }
 
     function retryWrongWords() {
-      const wrongUnique = [];
-      const seen = new Set();
-
-      wrongAnswers.forEach(item => {
-        if (!seen.has(wordKey(item.word.en))) {
-          wrongUnique.push(item.word);
-          seen.add(wordKey(item.word.en));
-        }
-      });
+      const wrongUnique = uniqueWords(wrongAnswers.map(item => item.word));
 
       if (wrongUnique.length < 4) {
         alert("You need at least 4 wrong words to retry in multiple choice mode.");
@@ -2065,23 +1818,21 @@
 
     function toggleCurrentBookmark() {
       if (!currentWord) return;
-      toggleBookmarkByWord(currentWord.en);
+      toggleBookmarkById(wordId(currentWord));
       updateBookmarkUI();
       renderHomeBookmarks();
     }
 
-    function toggleBookmarkByWord(enWord) {
-      const word = vocabulary.find(w => wordKey(w.en) === wordKey(enWord));
+    function toggleBookmarkById(id) {
+      const word = vocabulary.find(w => wordId(w) === id);
       if (!word) return;
 
       const bookmarks = getBookmarksRaw();
-      const key = wordKey(word.en);
-      const exists = bookmarks.some(item => wordKey(item.en) === key);
+      const exists = bookmarks.some(item => item.id === id);
 
       let updated;
-
       if (exists) {
-        updated = bookmarks.filter(item => wordKey(item.en) !== key);
+        updated = bookmarks.filter(item => item.id !== id);
       } else {
         updated = [...bookmarks, word];
       }
@@ -2098,23 +1849,23 @@
     function updateBookmarkUI() {
       if (!currentWord) return;
 
-      const marked = isBookmarked(currentWord.en);
+      const marked = isBookmarked(currentWord);
 
       bookmarkTag.classList.toggle("hidden", !marked);
       bookmarkBtn.classList.toggle("bookmarked", marked);
       bookmarkBtn.textContent = marked ? "★ Remove Bookmark" : "☆ Bookmark This Word";
     }
 
-    function isBookmarked(enWord) {
-      return getBookmarksRaw().some(item => wordKey(item.en) === wordKey(enWord));
+    function isBookmarked(word) {
+      return getBookmarksRaw().some(item => item.id === wordId(word));
     }
 
     function getBookmarkedWords() {
       const bookmarks = getBookmarksRaw();
 
       return uniqueWords(bookmarks.map(bookmark => {
-        const builtIn = vocabulary.find(w => wordKey(w.en) === wordKey(bookmark.en));
-        return builtIn || bookmark;
+        const latest = vocabulary.find(w => wordId(w) === bookmark.id);
+        return latest || bookmark;
       }));
     }
 
@@ -2171,10 +1922,8 @@
               </div>
               <div class="bookmark-word">${escapeHtml(word.en)}</div>
               <div><strong>Japanese:</strong> ${escapeHtml(word.ja)}</div>
-              <div><strong>Example:</strong> ${escapeHtml(word.exampleEn)}</div>
-              <div><strong>Japanese:</strong> ${escapeHtml(word.exampleJa)}</div>
             </div>
-            <button class="danger small" onclick="toggleBookmarkByWord('${escapeForAttribute(word.en)}')">
+            <button class="danger small" onclick="toggleBookmarkById('${escapeForAttribute(wordId(word))}')">
               Remove
             </button>
           </div>
@@ -2200,8 +1949,8 @@
 
     function saveCompletedRaw(data) {
       localStorage.setItem(COMPLETED_STORAGE_KEY, JSON.stringify({
-        EN_TO_JA: [...new Set((data.EN_TO_JA || []).map(wordKey))],
-        JA_TO_EN: [...new Set((data.JA_TO_EN || []).map(wordKey))]
+        EN_TO_JA: [...new Set(data.EN_TO_JA || [])],
+        JA_TO_EN: [...new Set(data.JA_TO_EN || [])]
       }));
     }
 
@@ -2210,12 +1959,12 @@
       return data[direction] || [];
     }
 
-    function addCompletedWord(enWord, direction) {
+    function addCompletedWord(word, direction) {
       const data = getCompletedRaw();
-      const key = wordKey(enWord);
+      const id = wordId(word);
 
-      if (!data[direction].includes(key)) {
-        data[direction].push(key);
+      if (!data[direction].includes(id)) {
+        data[direction].push(id);
         saveCompletedRaw(data);
       }
     }
@@ -2237,17 +1986,13 @@
       const completed = getCompletedForDirection(direction);
       const total = vocabulary.length;
 
-      const completedExisting = vocabulary
-        .filter(w => completed.includes(wordKey(w.en))).length;
+      const completedExisting = vocabulary.filter(w => completed.includes(wordId(w))).length;
 
       const basicTotal = vocabulary.filter(w => w.level === "BASIC").length;
       const advancedTotal = vocabulary.filter(w => w.level === "ADVANCED").length;
 
-      const basicCompleted = vocabulary
-        .filter(w => w.level === "BASIC" && completed.includes(wordKey(w.en))).length;
-
-      const advancedCompleted = vocabulary
-        .filter(w => w.level === "ADVANCED" && completed.includes(wordKey(w.en))).length;
+      const basicCompleted = vocabulary.filter(w => w.level === "BASIC" && completed.includes(wordId(w))).length;
+      const advancedCompleted = vocabulary.filter(w => w.level === "ADVANCED" && completed.includes(wordId(w))).length;
 
       box.innerHTML = `
         <strong>${title}</strong><br>
@@ -2263,30 +2008,27 @@
       const en = document.getElementById("customEn").value.trim();
       const ja = document.getElementById("customJa").value.trim();
       const level = document.getElementById("customLevel").value;
-      const exampleEn = document.getElementById("customExampleEn").value.trim();
-      const exampleJa = document.getElementById("customExampleJa").value.trim();
 
       if (!en || !ja) {
         alert("Please enter both English word and Japanese meaning.");
         return;
       }
 
-      if (vocabulary.some(w => wordKey(w.en) === wordKey(en))) {
+      if (vocabulary.some(w => normalizeEnglish(w.en) === normalizeEnglish(en))) {
         alert("This word already exists.");
         return;
       }
 
-      const customNumber = "CUSTOM-" + Date.now();
+      const customId = "C-" + Date.now();
 
-      const newWord = makeWordObject({
-        number: customNumber,
+      const newWord = {
+        id: customId,
+        number: customId,
         en,
         ja,
         level,
-        source: "CUSTOM",
-        exampleEn,
-        exampleJa
-      });
+        source: "CUSTOM"
+      };
 
       customVocabulary.push(newWord);
       saveCustomWordsRaw(customVocabulary);
@@ -2294,8 +2036,6 @@
 
       document.getElementById("customEn").value = "";
       document.getElementById("customJa").value = "";
-      document.getElementById("customExampleEn").value = "";
-      document.getElementById("customExampleJa").value = "";
 
       renderCustomWords();
       renderProgress();
@@ -2318,11 +2058,11 @@
       localStorage.setItem(CUSTOM_STORAGE_KEY, JSON.stringify(uniqueWords(words)));
     }
 
-    function deleteCustomWord(enWord) {
+    function deleteCustomWord(id) {
       const ok = confirm("Delete this custom word?");
       if (!ok) return;
 
-      customVocabulary = customVocabulary.filter(w => wordKey(w.en) !== wordKey(enWord));
+      customVocabulary = customVocabulary.filter(w => wordId(w) !== id);
       saveCustomWordsRaw(customVocabulary);
       vocabulary = combineVocabulary();
 
@@ -2350,10 +2090,8 @@
               <span class="pill">${escapeHtml(word.level)}</span>
               <div class="custom-word">${escapeHtml(word.en)}</div>
               <div><strong>Japanese:</strong> ${escapeHtml(word.ja)}</div>
-              <div><strong>Example:</strong> ${escapeHtml(word.exampleEn)}</div>
-              <div><strong>Japanese:</strong> ${escapeHtml(word.exampleJa)}</div>
             </div>
-            <button class="danger small" onclick="deleteCustomWord('${escapeForAttribute(word.en)}')">Delete</button>
+            <button class="danger small" onclick="deleteCustomWord('${escapeForAttribute(wordId(word))}')">Delete</button>
           </div>
         `;
         list.appendChild(div);
@@ -2369,11 +2107,11 @@
       const result = [];
 
       list.forEach(word => {
-        const key = wordKey(word.en);
-        if (!key) return;
+        const id = wordId(word);
+        if (!id) return;
 
-        if (!seen.has(key)) {
-          seen.add(key);
+        if (!seen.has(id)) {
+          seen.add(id);
           result.push(word);
         }
       });
@@ -2381,8 +2119,8 @@
       return result;
     }
 
-    function wordKey(text) {
-      return normalizeEnglish(text);
+    function wordId(word) {
+      return String(word.id || word.number || normalizeEnglish(word.en));
     }
 
     function normalizeEnglish(text) {
